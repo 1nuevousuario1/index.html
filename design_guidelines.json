@@ -1,0 +1,109 @@
+{
+  "brand": {
+    "name": "Mundo Infantil",
+    "vibe": "Colorful, modern, playful, family-friendly, trust-worthy e-commerce"
+  },
+  "theme_archetype": "Archetype 6: Vibrant Play",
+  "theme_mode": "light",
+  "colors": {
+    "primary": "#4CAFEE",
+    "primary_hover": "#3B9AD0",
+    "secondary": "#FFD93D",
+    "secondary_hover": "#E6C337",
+    "accent_red": "#FF6B6B",
+    "accent_green": "#6BCB77",
+    "background": "#F9F9F9",
+    "surface": "#FFFFFF",
+    "text_main": "#1F2937",
+    "text_muted": "#4B5563",
+    "border": "#E5E7EB"
+  },
+  "typography": {
+    "setup_instruction": "Import Fredoka and Nunito from Google Fonts.",
+    "heading_font": "'Fredoka', sans-serif",
+    "body_font": "'Nunito', sans-serif",
+    "h1": "font-fredoka text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[#1F2937]",
+    "h2": "font-fredoka text-2xl sm:text-3xl lg:text-4xl font-semibold text-[#1F2937]",
+    "h3": "font-fredoka text-xl sm:text-2xl font-medium text-[#1F2937]",
+    "body": "font-nunito text-base text-[#4B5563] leading-relaxed",
+    "button_text": "font-fredoka text-lg tracking-wide font-medium"
+  },
+  "spacing_and_layout": {
+    "general": "Generous spacing. Use p-6, p-8, p-12 for containers.",
+    "border_radius": "rounded-2xl or rounded-3xl for cards, buttons, and sections.",
+    "shadows": "shadow-[0_8px_30px_rgb(0,0,0,0.06)] for floating cards, shadow-sm for default.",
+    "grid_system_marketing": "Bento Grid (Mode A) for promos. Asymmetrical grids for visual interest.",
+    "grid_system_catalog": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 for toys.",
+    "grid_system_admin": "Mode B (Control Room) with tighter gaps (gap-6) but soft rounded widgets."
+  },
+  "components": {
+    "header": "Sticky nav (sticky top-0 z-50), bg-white/90 backdrop-blur-xl border-b border-[#E5E7EB]. Centered colorful text logo. Cart, user, and loyalty points on the right.",
+    "hero_section": "Overlaid hero. Use the hero_banner image with a bg-black/20 overlay. Center aligned text, massive H1 in White, contrasting CTA in Yellow (#FFD93D) or #FF6B6B.",
+    "product_card": "bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2. Image container max-h-48 overflow-hidden rounded-t-2xl. Body p-4. H3 for title, bold text-[#4CAFEE] for price. Primary button 'Comprar'.",
+    "buttons": "Pill-shaped (rounded-full). Primary: bg-[#4CAFEE] text-white hover:bg-[#3B9AD0]. Secondary: bg-[#FFD93D] text-gray-900. Accent: bg-[#FF6B6B] text-white. Include icon (cart, star) on left side of text. Padding: px-6 py-3.",
+    "inputs": "rounded-xl border border-gray-200 bg-white p-3 font-nunito focus:ring-4 focus:ring-[#4CAFEE]/20 focus:border-[#4CAFEE].",
+    "loyalty_badge": "Round pills or star-shaped SVG elements. Bronze, Silver, Gold colors."
+  },
+  "interactions_and_motion": {
+    "hover_states": "Playful scale-ups. hover:scale-105 on buttons. hover:-translate-y-2 on cards.",
+    "page_transitions": "Framer motion staggered fade-ins for product grids."
+  },
+  "accessibility_and_testing": {
+    "contrast": "Ensure text over colorful backgrounds meets APCA. Use dark text on yellow, white text on blue/red/green.",
+    "testing": "All interactive elements MUST have role-based data-testid (e.g., 'buy-toy-button', 'cart-icon-link', 'category-filter')."
+  },
+  "media": {
+    "hero_banner": {
+      "url": "https://images.unsplash.com/photo-1754246523025-35b0d2007d0b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwzfHxraWRzJTIwdG95JTIwc3RvcmV8ZW58MHx8fHwxNzc3NzY3OTQxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Toy store interior to use as hero section background"
+    },
+    "promo_kids": {
+      "url": "https://images.unsplash.com/photo-1552139684-9393e55cb7d6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwyfHxraWRzJTIwdG95JTIwc3RvcmV8ZW58MHx8fHwxNzc3NzY3OTQyfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Toddler playing, use for 'Shop by Age' or Promo sections"
+    },
+    "product_toy_1": {
+      "url": "https://images.pexels.com/photos/10003874/pexels-photo-10003874.jpeg",
+      "description": "White teddy bear to use as a product example"
+    },
+    "product_toy_2": {
+      "url": "https://images.unsplash.com/photo-1741389570311-783e71b138db?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwxfHxraWRzJTIwdG95JTIwc3RvcmV8ZW58MHx8fHwxNzc3NzY3OTQxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Pink toys category example"
+    },
+    "loyalty_icon": {
+      "url": "https://images.unsplash.com/photo-1667918135450-e8f2c1abd480?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxnb2xkJTIwc3RhciUyMG1lZGFsJTIwcmliYm9ufGVufDB8fHx8MTc3Nzc2NzkzN3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Gold star medal for loyalty program visual"
+    }
+  },
+  "pages_structure": {
+    "home": [
+      "Header: Logo 'Mundo Infantil', Search bar, Cart, Login, Points",
+      "Hero: Image background, text 'Encuentra los mejores juguetes para todas las edades', primary CTA 'Explorar Catálogo'",
+      "Features: Icon row (Fast shipping, Safe toys, Earn Points)",
+      "Products: Grid of toy cards (Image, Title, Price, Buy button)",
+      "Promotions: Bento grid showing discounts using bright #FF6B6B and #FFD93D blocks",
+      "Loyalty Section: 'Únete y gana puntos' with tiers (Bronze/Silver/Gold)",
+      "Footer: Contact info, links, newsletter"
+    ],
+    "catalog": [
+      "Filters Sidebar (Categories, Age 0-3, 4-7, 8+, Price)",
+      "Product Grid"
+    ],
+    "dashboard_user": [
+      "Order History Table",
+      "Loyalty Progress Bar (Points to next tier)"
+    ],
+    "dashboard_admin": [
+      "Sales Chart (Recharts line chart using #4CAFEE)",
+      "Recent Orders Table",
+      "Product Management"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "You are building a hybrid e-commerce app. The front-end store must feel like a modern, fun app for kids/parents.",
+    "Use pure HTML/Tailwind for marketing layouts (Home, Promos) to allow overlapping and playful asymmetry.",
+    "For interactive logic (Cart, Checkout, Admin Data Tables), use heavily customized Shadcn components. Strip the default Vercel look by applying rounded-2xl, the custom colors, and soft shadows.",
+    "Avoid the standard 'dark mode' entirely; lock the app to light mode (Vibrant Play archetype).",
+    "For loyalty tiers, use the accent colors: #FF6B6B (Bronze/Base), #4CAFEE (Silver/Mid), #FFD93D (Gold/Top).",
+    "Ensure the application strictly handles .js/.jsx extensions for any frontend files."
+  ]
+}
