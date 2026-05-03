@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mundo Infantil - Juguetería</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============== RESET / BASE ============== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #4CAFEE;
+    --blue-dark: #3B9AD0;
+    --yellow: #FFD93D;
+    --red: #FF6B6B;
+    --green: #6BCB77;
+    --bg: #F9F9F9;
+    --text: #1F2937;
+    --muted: #4B5563;
+    --border: #E5E7EB;
+  }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .fredoka { font-family: 'Fredoka', sans-serif; }
+  a { text-decoration: none; color: inherit; }
+  button { font-family: inherit; cursor: pointer; border: none; }
+
+  /* ============== HEADER ============== */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav {
+    max-width: 1200px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 80px;
+  }
+  .logo {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 28px; font-weight: 700;
+  }
+  .logo .blue { color: var(--blue); }
+  .logo .red  { color: var(--red); margin-left: 4px; }
+  .nav-links { display: flex; gap: 24px; font-family: 'Fredoka', sans-serif; }
+  .nav-links a:hover { color: var(--blue); }
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
+  .points-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(255,217,61,0.25); border: 1px solid var(--yellow);
+    font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600;
+  }
+  .cart-btn {
+    position: relative; padding: 8px;
+    border-radius: 999px; background: transparent;
+    transition: background 0.2s;
+  }
+  .cart-btn:hover { background: rgba(76,175,238,0.1); }
+  .cart-count {
+    position: absolute; top: -2px; right: -2px;
+    background: var(--red); color: white;
+    width: 20px; height: 20px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ============== BUTTONS ============== */
+  .btn {
+    padding: 12px 24px; border-radius: 999px;
+    font-family: 'Fredoka', sans-serif; font-weight: 500; font-size: 16px;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary {
+    background: var(--blue); color: white;
+    box-shadow: 0 4px 14px rgba(76,175,238,0.3);
+  }
+  .btn-primary:hover { background: var(--blue-dark); transform: translateY(-2px) scale(1.03); }
+  .btn-yellow { background: var(--yellow); color: var(--text); font-weight: 600; }
+  .btn-yellow:hover { background: #e6c337; transform: translateY(-2px) scale(1.03); }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:hover { background: #ef5656; transform: translateY(-2px) scale(1.03); }
+
+  /* ============== HERO ============== */
+  .hero {
+    position: relative; overflow: hidden;
+    background-image: url('https://images.unsplash.com/photo-1754246523025-35b0d2007d0b?w=1600&q=80');
+    background-size: cover; background-position: center;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0.65), rgba(0,0,0,0.25));
+  }
+  .hero-content {
+    position: relative; max-width: 1200px; margin: 0 auto;
+    padding: 80px 24px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+  }
+  .hero-text .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--yellow); color: var(--text);
+    padding: 6px 16px; border-radius: 999px;
+    font-family: 'Fredoka', sans-serif; font-size: 14px; margin-bottom: 24px;
+  }
+  .hero-text h1 {
+    font-family: 'Fredoka', sans-serif; font-size: 56px; font-weight: 700;
+    color: white; line-height: 1.1; text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .hero-text h1 span { color: var(--yellow); }
+  .hero-text p { color: rgba(255,255,255,0.95); font-size: 18px; margin: 20px 0 32px; }
+  .hero-text .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-img {
+    width: 100%; max-width: 420px; border-radius: 50%;
+    margin: 0 auto; display: block;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    border: 8px solid rgba(255,255,255,0.3);
+  }
+
+  /* ============== SECTIONS ============== */
+  section.container { max-width: 1200px; margin: 0 auto; padding: 60px 24px; }
+  h2.section-title {
+    font-family: 'Fredoka', sans-serif; font-size: 36px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .section-sub { color: var(--muted); margin-bottom: 32px; }
+
+  /* ============== FEATURES ============== */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feature {
+    background: white; padding: 24px; border-radius: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .feature-icon {
+    width: 48px; height: 48px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+
+  /* ============== PRODUCTS ============== */
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;
+  }
+  .chip {
+    padding: 8px 18px; border-radius: 999px;
+    background: white; border: 2px solid var(--border);
+    font-family: 'Fredoka', sans-serif; font-size: 14px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip:hover { border-color: var(--blue); }
+  .chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+  .products-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  }
+  .product-card {
+    background: white; border-radius: 24px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    transition: all 0.3s;
+    animation: fadeUp 0.5s ease-out both;
+  }
+  .product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.10);
+  }
+  .product-img-wrap {
+    position: relative; aspect-ratio: 1/1; overflow: hidden; background: #F9F9F9;
+  }
+  .product-img-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.5s;
+  }
+  .product-card:hover .product-img-wrap img { transform: scale(1.1); }
+  .product-badge {
+    position: absolute; top: 12px; left: 12px;
+    padding: 4px 12px; border-radius: 999px;
+    font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 700;
+    background: var(--red); color: white;
+  }
+  .product-info { padding: 16px; }
+  .product-meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .product-name {
+    font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .product-price {
+    font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700;
+    color: var(--blue); margin-bottom: 12px;
+  }
+  .product-price .old {
+    color: var(--muted); text-decoration: line-through;
+    font-weight: 400; font-size: 14px; margin-left: 8px;
+  }
+  .add-btn {
+    width: 100%; padding: 10px; border-radius: 999px;
+    background: var(--blue); color: white;
+    font-family: 'Fredoka', sans-serif; font-weight: 500;
+    transition: all 0.2s;
+  }
+  .add-btn:hover { background: var(--blue-dark); transform: scale(1.03); }
+
+  /* ============== PROMO ============== */
+  .promo-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+  .promo-card {
+    border-radius: 24px; padding: 40px; color: white;
+    position: relative; overflow: hidden;
+  }
+  .promo-blue { background: linear-gradient(135deg, #4CAFEE, #3B9AD0); }
+  .promo-red  { background: linear-gradient(135deg, #FF6B6B, #FF9E6B); }
+
+  /* ============== REWARDS ============== */
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .tier {
+    background: white; padding: 24px; border-radius: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .tier-icon {
+    width: 56px; height: 56px; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 12px;
+  }
+  .tier h3 { font-family: 'Fredoka', sans-serif; font-size: 24px; }
+  .tier ul { list-style: none; margin-top: 12px; font-size: 14px; }
+  .tier li { padding: 4px 0; }
+
+  /* ============== CART DRAWER ============== */
+  .drawer-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 200;
+  }
+  .drawer-overlay.open { display: block; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 90vw;
+    background: white; z-index: 201;
+    transform: translateX(100%); transition: transform 0.3s;
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .drawer-foot { padding: 20px; border-top: 1px solid var(--border); }
+  .cart-item {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cart-item img { width: 64px; height: 64px; object-fit: cover; border-radius: 16px; }
+  .cart-item-info { flex: 1; }
+  .qty-controls {
+    display: inline-flex; align-items: center;
+    border: 2px solid var(--border); border-radius: 999px;
+    margin-top: 4px;
+  }
+  .qty-controls button { padding: 4px 10px; background: transparent; }
+  .remove-btn { background: transparent; color: var(--red); margin-left: auto; padding: 4px; }
+
+  /* ============== FOOTER ============== */
+  footer {
+    background: white; border-top: 1px solid var(--border);
+    margin-top: 80px;
+  }
+  .footer-content {
+    max-width: 1200px; margin: 0 auto; padding: 48px 24px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
+  }
+  .footer-content h4 {
+    font-family: 'Fredoka', sans-serif; margin-bottom: 12px;
+  }
+  .footer-content ul { list-style: none; }
+  .footer-content li { color: var(--muted); padding: 4px 0; font-size: 14px; }
+  .copyright {
+    border-top: 1px solid var(--border); padding: 16px;
+    text-align: center; color: var(--muted); font-size: 14px;
+  }
+
+  /* ============== TOAST ============== */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--green); color: white;
+    padding: 14px 24px; border-radius: 16px;
+    font-family: 'Fredoka', sans-serif; font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ============== ANIMATIONS ============== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============== RESPONSIVE ============== */
+  @media (max-width: 768px) {
+    .hero-content { grid-template-columns: 1fr; padding: 40px 24px; }
+    .hero-text h1 { font-size: 36px; text-align: center; }
+    .hero-text p, .hero-text .actions { text-align: center; justify-content: center; }
+    .hero-img { max-width: 280px; }
+    .features { grid-template-columns: 1fr; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+    .promo-grid { grid-template-columns: 1fr; }
+    .tiers { grid-template-columns: 1fr; }
+    .footer-content { grid-template-columns: repeat(2, 1fr); }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 480px) {
+    .products-grid { grid-template-columns: 1fr; }
+    .footer-content { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="nav">
+    <a href="#" class="logo"><span class="blue">Mundo</span><span class="red">Infantil</span></a>
+    <nav class="nav-links">
+      <a href="#inicio">Inicio</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#recompensas">Recompensas</a>
+    </nav>
+    <div class="nav-actions">
+      <div class="points-pill">⭐ <span id="user-points">0</span> pts</div>
+      <button class="cart-btn" onclick="toggleCart()">
+        🛒 <span class="cart-count" id="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="badge">✨ Nueva colección 2026</div>
+      <h1 class="fredoka">Encuentra los mejores juguetes para <span>todas las edades</span></h1>
+      <p>Diversión garantizada · Envío rápido · Puntos en cada compra</p>
+      <div class="actions">
+        <a href="#catalogo" class="btn btn-yellow">Explorar Catálogo</a>
+        <a href="#recompensas" class="btn btn-red">🎁 Gana puntos</a>
+      </div>
+    </div>
+    <img class="hero-img" src="https://customer-assets.emergentagent.com/job_jugueteria-pro/artifacts/y7hcnpi7_Mundo%20Infantil.jpg" alt="Mundo Infantil" />
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="container">
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon" style="background:#4CAFEE22;">🚚</div>
+      <div><h3 class="fredoka">Envío rápido</h3><p style="color:var(--muted);font-size:14px;">Entregas en 24-48 hrs</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:#6BCB7722;">🛡️</div>
+      <div><h3 class="fredoka">Juguetes seguros</h3><p style="color:var(--muted);font-size:14px;">Certificados y probados</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon" style="background:#FFD93D44;">⭐</div>
+      <div><h3 class="fredoka">Gana recompensas</h3><p style="color:var(--muted);font-size:14px;">1 punto por cada $1</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CATALOG -->
+<section class="container" id="catalogo">
+  <h2 class="section-title fredoka">Catálogo de Juguetes</h2>
+  <p class="section-sub">Explora nuestra colección</p>
+  <div class="filters" id="filters"></div>
+  <div class="products-grid" id="products-grid"></div>
+</section>
+
+<!-- PROMO -->
+<section class="container">
+  <div class="promo-grid">
+    <div class="promo-card promo-blue">
+      <h3 class="fredoka" style="font-size:30px;">¡Promoción del mes!</h3>
+      <p style="margin-top:8px;opacity:.95;">Hasta 20% de descuento en peluches y sets de arte</p>
+      <a href="#catalogo" class="btn btn-yellow" style="margin-top:24px;">Comprar ahora</a>
+    </div>
+    <div class="promo-card promo-red">
+      <div style="font-size:40px;">🏆</div>
+      <h3 class="fredoka" style="font-size:24px;margin-top:8px;">Club Mundo Infantil</h3>
+      <p style="margin-top:8px;opacity:.95;font-size:14px;">Niveles Bronce, Plata y Oro con beneficios exclusivos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- REWARDS -->
+<section class="container" id="recompensas">
+  <h2 class="section-title fredoka" style="text-align:center;">Programa de Recompensas</h2>
+  <p class="section-sub" style="text-align:center;">Gana 1 punto por cada $1 gastado</p>
+  <div class="tiers">
+    <div class="tier">
+      <div class="tier-icon" style="background:#FF6B6B22;color:#FF6B6B;">🥉</div>
+      <h3 style="color:var(--red);">Bronce</h3>
+      <p style="color:var(--muted);font-size:14px;">0 - 99 puntos</p>
+      <ul><li>• 1 punto por cada $1</li><li>• Ofertas exclusivas</li></ul>
+    </div>
+    <div class="tier">
+      <div class="tier-icon" style="background:#4CAFEE22;color:#4CAFEE;">🥈</div>
+      <h3 style="color:var(--blue);">Plata</h3>
+      <p style="color:var(--muted);font-size:14px;">100 - 499 puntos</p>
+      <ul><li>• 5% de descuento permanente</li><li>• Envíos prioritarios</li></ul>
+    </div>
+    <div class="tier">
+      <div class="tier-icon" style="background:#FFD93D44;">👑</div>
+      <h3 style="color:#E6A800;">Oro</h3>
+      <p style="color:var(--muted);font-size:14px;">500+ puntos</p>
+      <ul><li>• 10% de descuento permanente</li><li>• Envío express gratis</li><li>• Regalo de cumpleaños</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- CART DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleCart()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3 class="fredoka" style="font-size:22px;">Tu carrito</h3>
+    <button onclick="toggleCart()" style="background:transparent;font-size:22px;">✕</button>
+  </div>
+  <div class="drawer-body" id="cart-body"></div>
+  <div class="drawer-foot">
+    <div style="display:flex;justify-content:space-between;font-family:Fredoka;font-size:18px;font-weight:700;margin-bottom:12px;">
+      <span>Total:</span>
+      <span style="color:var(--blue);" id="cart-total">$0.00</span>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="checkout()">Finalizar compra</button>
+  </div>
+</aside>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-content">
+    <div>
+      <div class="logo"><span class="blue">Mundo</span><span class="red">Infantil</span></div>
+      <p style="color:var(--muted);font-size:14px;margin-top:8px;">Los mejores juguetes para crear recuerdos inolvidables.</p>
+    </div>
+    <div><h4>Tienda</h4><ul><li>Catálogo</li><li>Promociones</li><li>Novedades</li></ul></div>
+    <div><h4>Ayuda</h4><ul><li>Envíos</li><li>FAQ</li><li>Contacto</li></ul></div>
+    <div><h4>Contacto</h4><ul><li>📧 hola@mundoinfantil.com</li><li>📞 +52 555 123 4567</li></ul></div>
+  </div>
+  <div class="copyright">Hecho con ❤️ por Mundo Infantil · 2026</div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============== DATA ============== */
+  const PRODUCTS = [
+    { id: 1, name: "Oso de Peluche Clásico", category: "Peluches", age: "0-3", price: 24.99, discount: 10, img: "https://images.pexels.com/photos/10003874/pexels-photo-10003874.jpeg?w=600" },
+    { id: 2, name: "Set de Bloques", category: "Construcción", age: "4-7", price: 39.99, discount: 0, img: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=600&q=80" },
+    { id: 3, name: "Muñeca Princesa", category: "Muñecas", age: "4-7", price: 19.99, discount: 15, img: "https://images.unsplash.com/photo-1741389570311-783e71b138db?w=600&q=80" },
+    { id: 4, name: "Auto Control Remoto", category: "Vehículos", age: "8+", price: 54.99, discount: 0, img: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=600&q=80" },
+    { id: 5, name: "Rompecabezas Animal", category: "Didácticos", age: "4-7", price: 14.99, discount: 0, img: "https://images.unsplash.com/photo-1611604548018-d56bbd85d681?w=600&q=80" },
+    { id: 6, name: "Set de Arte y Pintura", category: "Arte", age: "4-7", price: 29.99, discount: 20, img: "https://images.unsplash.com/photo-1503945438517-f65904a52ce6?w=600&q=80" },
+    { id: 7, name: "Dinosaurio Interactivo", category: "Interactivos", age: "4-7", price: 44.99, discount: 0, img: "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=600&q=80" },
+    { id: 8, name: "Cocinita de Madera", category: "Juegos de Rol", age: "4-7", price: 89.99, discount: 0, img: "https://images.unsplash.com/photo-1558877385-8c1a19c4b4bd?w=600&q=80" },
+  ];
+  const CATEGORIES = ["Todas", ...new Set(PRODUCTS.map(p => p.category))];
+
+  /* ============== STATE ============== */
+  let cart = JSON.parse(localStorage.getItem("mi_cart") || "[]");
+  let points = parseInt(localStorage.getItem("mi_points") || "0");
+  let activeFilter = "Todas";
+
+  /* ============== RENDER ============== */
+  function renderFilters() {
+    document.getElementById("filters").innerHTML = CATEGORIES.map(c =>
+      `<button class="chip ${c === activeFilter ? "active" : ""}" onclick="setFilter('${c}')">${c}</button>`
+    ).join("");
+  }
+
+  function renderProducts() {
+    const list = activeFilter === "Todas" ? PRODUCTS : PRODUCTS.filter(p => p.category === activeFilter);
+    document.getElementById("products-grid").innerHTML = list.map(p => {
+      const finalPrice = p.price * (1 - p.discount / 100);
+      return `
+        <div class="product-card">
+          <div class="product-img-wrap">
+            <img src="${p.img}" alt="${p.name}" loading="lazy" />
+            ${p.discount ? `<span class="product-badge">-${p.discount}%</span>` : ""}
+          </div>
+          <div class="product-info">
+            <div class="product-meta">${p.category} · ${p.age} años</div>
+            <div class="product-name fredoka">${p.name}</div>
+            <div class="product-price fredoka">
+              $${finalPrice.toFixed(2)}
+              ${p.discount ? `<span class="old">$${p.price.toFixed(2)}</span>` : ""}
+            </div>
+            <button class="add-btn" onclick="addToCart(${p.id})">🛒 Comprar</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderCart() {
+    const body = document.getElementById("cart-body");
+    if (cart.length === 0) {
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 0;">Tu carrito está vacío</p>`;
+    } else {
+      body.innerHTML = cart.map(i => `
+        <div class="cart-item">
+          <img src="${i.img}" alt="${i.name}" />
+          <div class="cart-item-info">
+            <div class="fredoka" style="font-weight:600;">${i.name}</div>
+            <div style="color:var(--blue);font-weight:700;">$${(i.finalPrice * i.qty).toFixed(2)}</div>
+            <div class="qty-controls">
+              <button onclick="updateQty(${i.id}, -1)">−</button>
+              <span style="padding:0 10px;">${i.qty}</span>
+              <button onclick="updateQty(${i.id}, 1)">+</button>
+            </div>
+          </div>
+          <button class="remove-btn" onclick="removeFromCart(${i.id})">🗑️</button>
+        </div>
+      `).join("");
+    }
+    const total = cart.reduce((s, i) => s + i.finalPrice * i.qty, 0);
+    document.getElementById("cart-total").textContent = `$${total.toFixed(2)}`;
+    document.getElementById("cart-count").textContent = cart.reduce((s, i) => s + i.qty, 0);
+    document.getElementById("user-points").textContent = points;
+  }
+
+  /* ============== ACTIONS ============== */
+  function setFilter(c) { activeFilter = c; renderFilters(); renderProducts(); }
+
+  function addToCart(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    const finalPrice = p.price * (1 - p.discount / 100);
+    const existing = cart.find(c => c.id === id);
+    if (existing) existing.qty++;
+    else cart.push({ id, name: p.name, img: p.img, finalPrice, qty: 1 });
+    save();
+    showToast(`${p.name} añadido al carrito 🎉`);
+  }
+
+  function updateQty(id, delta) {
+    const item = cart.find(c => c.id === id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+    save();
+  }
+
+  function removeFromCart(id) { cart = cart.filter(c => c.id !== id); save(); }
+
+  function toggleCart() {
+    document.getElementById("drawer").classList.toggle("open");
+    document.getElementById("drawer-overlay").classList.toggle("open");
+  }
+
+  function checkout() {
+    if (cart.length === 0) { showToast("Tu carrito está vacío"); return; }
+    const total = cart.reduce((s, i) => s + i.finalPrice * i.qty, 0);
+    points += Math.floor(total);
+    cart = [];
+    save();
+    toggleCart();
+    showToast(`¡Compra exitosa! Ganaste ${Math.floor(total)} puntos 🌟`);
+  }
+
+  function save() {
+    localStorage.setItem("mi_cart", JSON.stringify(cart));
+    localStorage.setItem("mi_points", points);
+    renderCart();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+  }
+
+  /* ============== INIT ============== */
+  renderFilters();
+  renderProducts();
+  renderCart();
+</script>
+</body>
+</html>
