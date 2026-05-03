@@ -45,8 +45,11 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
         <div className="mi-card p-6">
           <h3 className="font-fredoka text-xl font-bold">Ventas por día</h3>
-          <div className="h-64 mt-4">
-            <ResponsiveContainer>
+          <div className="h-64 mt-4" style={{ minHeight: 256 }}>
+            {report.by_day.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-[#4B5563] font-nunito">Aún no hay ventas registradas</div>
+            ) : (
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={report.by_day}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="date" style={{ fontFamily: "Nunito", fontSize: 12 }} />
@@ -55,12 +58,16 @@ export default function AdminDashboard() {
                 <Line type="monotone" dataKey="sales" stroke="#4CAFEE" strokeWidth={3} dot={{ fill: "#4CAFEE" }} />
               </LineChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
         <div className="mi-card p-6">
           <h3 className="font-fredoka text-xl font-bold">Top productos</h3>
-          <div className="h-64 mt-4">
-            <ResponsiveContainer>
+          <div className="h-64 mt-4" style={{ minHeight: 256 }}>
+            {report.top_products.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-[#4B5563] font-nunito">Sin datos todavía</div>
+            ) : (
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={report.top_products}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis dataKey="name" style={{ fontFamily: "Nunito", fontSize: 10 }} />
@@ -69,6 +76,7 @@ export default function AdminDashboard() {
                 <Bar dataKey="revenue" fill="#FFD93D" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

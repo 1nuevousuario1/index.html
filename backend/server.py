@@ -365,7 +365,17 @@ async def order_status(session_id: str, request: Request, user: dict = Depends(g
     host_url = str(request.base_url)
     webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
     stripe_checkout = StripeCheckout(api_key=os.environ["STRIPE_API_KEY"], webhook_url=webhook_url)
-    status_resp: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+    try:
+        status_resp: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+    except Exception as e:
+        # Stripe may not have the session ready immediately, or test key limitation
+        return {
+            "status": tx.get("status", "pending"),
+            "payment_status": tx.get("payment_status", "initiated"),
+            "order_id": tx["order_id"],
+            "amount": tx["amount"],
+            "note": "pending",
+        }
 
     # Update payment transaction
     new_status = status_resp.status
