@@ -14,20 +14,27 @@ export default function Home() {
   return (
     <div data-testid="home-page">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#E8F4FD] via-[#FFF9E5] to-[#FFE8E8]">
-        <div className="relative max-w-7xl mx-auto px-6 py-16 md:py-20 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      <section className="relative overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(https://images.unsplash.com/photo-1754246523025-35b0d2007d0b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwzfHxraWRzJTIwdG95JTIwc3RvcmV8ZW58MHx8fHwxNzc3NzY3OTQxfDA&ixlib=rb-4.1.0&q=85)`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
+        <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <div className="text-center md:text-left order-2 md:order-1">
-            <div className="inline-flex items-center gap-2 bg-[#FFD93D] text-[#1F2937] px-4 py-1.5 rounded-full font-fredoka text-sm mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2 bg-[#FFD93D] text-[#1F2937] px-4 py-1.5 rounded-full font-fredoka text-sm mb-6 shadow-md">
               <Sparkles size={16} /> Nueva colección 2026
             </div>
-            <h1 className="font-fredoka text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1F2937] leading-tight">
-              Encuentra los mejores juguetes para <span className="text-[#4CAFEE]">todas las edades</span>
+            <h1 className="font-fredoka text-4xl sm:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg leading-tight">
+              Encuentra los mejores juguetes para <span className="text-[#FFD93D]">todas las edades</span>
             </h1>
-            <p className="mt-5 text-lg text-[#4B5563] font-nunito">
+            <p className="mt-5 text-lg text-white/95 font-nunito drop-shadow">
               Diversión garantizada · Envío rápido · Puntos en cada compra
             </p>
             <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-3">
-              <Link to="/catalogo" className="mi-btn-primary" data-testid="explore-catalog-btn">
+              <Link to="/catalogo" className="mi-btn-yellow" data-testid="explore-catalog-btn">
                 Explorar Catálogo
               </Link>
               <Link to="/recompensas" className="mi-btn-red">
@@ -39,7 +46,7 @@ export default function Home() {
             <img
               src="https://customer-assets.emergentagent.com/job_jugueteria-pro/artifacts/y7hcnpi7_Mundo%20Infantil.jpg"
               alt="Mundo Infantil"
-              className="w-full max-w-md rounded-full drop-shadow-2xl animate-fade-up"
+              className="w-full max-w-sm md:max-w-md rounded-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-fade-up ring-8 ring-white/30"
               data-testid="hero-logo"
             />
           </div>
