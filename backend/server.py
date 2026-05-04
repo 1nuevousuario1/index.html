@@ -19,6 +19,7 @@ import jwt
 from emergentintegrations.payments.stripe.checkout import (
     StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 )
+from fastapi.staticfiles import StaticFiles
 
 # ------------------ DB ------------------
 mongo_url = os.environ['MONGO_URL']
@@ -650,6 +651,11 @@ async def shutdown():
 
 # ------------------ include & CORS ------------------
 app.include_router(api_router)
+
+# Serve product images from /api/static/*
+static_dir = ROOT_DIR / "static"
+if static_dir.exists():
+    app.mount("/api/static", StaticFiles(directory=str(static_dir)), name="static")
 
 app.add_middleware(
     CORSMiddleware,
