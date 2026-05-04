@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import ProductCard from "../components/ProductCard";
 
 const CATEGORIES = ["Todas"];
-const AGES = ["Todas", "0-3", "4-7", "8+"];
+const AGES = ["Todas"];
 
 export default function Catalog() {
   const [products, setProducts] = useState([]);
