@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import ProductCard from "../components/ProductCard";
 
-const CATEGORIES = ["Todas", "Peluches", "Construcción", "Muñecas", "Vehículos", "Didácticos", "Arte", "Interactivos", "Juegos de Rol", "Bebés", "Figuras", "Personajes", "Acción", "Juegos de Mesa"];
+const CATEGORIES = ["Todas"];
 const AGES = ["Todas", "0-3", "4-7", "8+"];
 
 export default function Catalog() {
