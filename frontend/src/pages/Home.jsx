@@ -18,10 +18,10 @@ export default function Home() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1754246523025-35b0d2007d0b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwzfHxraWRzJTIwdG95JTIwc3RvcmV8ZW58MHx8fHwxNzc3NzY3OTQxfDA&ixlib=rb-4.1.0&q=85)`,
+            backgroundImage: `url(https://customer-assets.emergentagent.com/job_jugueteria-pro/artifacts/76svodo9_BACKGROUND%20MUNDO%20INFANTIL.jpg)`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10" />
         <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <div className="text-center md:text-left order-2 md:order-1">
             <div className="inline-flex items-center gap-2 bg-[#FFD93D] text-[#1F2937] px-4 py-1.5 rounded-full font-fredoka text-sm mb-6 shadow-md">
