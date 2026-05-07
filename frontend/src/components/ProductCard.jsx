@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "../lib/CartContext";
+import { resolveAssetUrl } from "../lib/api";
 import { toast } from "sonner";
 
 export default function ProductCard({ product, index = 0 }) {
@@ -18,7 +19,7 @@ export default function ProductCard({ product, index = 0 }) {
       <Link to={`/producto/${product.id}`} className="block">
         <div className="relative bg-[#F9F9F9] aspect-square overflow-hidden">
           <img
-            src={product.image_url}
+            src={resolveAssetUrl(product.image_url)}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
             loading="lazy"

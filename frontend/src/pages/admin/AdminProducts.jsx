@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { api, resolveAssetUrl } from "../../lib/api";
 import { toast } from "sonner";
 import { Plus, Edit2, Trash2, X } from "lucide-react";
 
@@ -47,7 +47,7 @@ export default function AdminProducts() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         {products.map((p) => (
           <div key={p.id} className="mi-card" data-testid={`admin-product-${p.id}`}>
-            <img src={p.image_url} alt={p.name} className="w-full aspect-square object-cover" />
+            <img src={resolveAssetUrl(p.image_url)} alt={p.name} className="w-full aspect-square object-cover" />
             <div className="p-4">
               <h3 className="font-fredoka font-semibold line-clamp-1">{p.name}</h3>
               <p className="text-[#4CAFEE] font-fredoka font-bold">${p.price.toFixed(2)}</p>

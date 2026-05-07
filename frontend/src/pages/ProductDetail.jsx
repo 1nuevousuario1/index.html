@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { api } from "../lib/api";
+import { api, resolveAssetUrl } from "../lib/api";
 import { useCart } from "../lib/CartContext";
 import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ export default function ProductDetail() {
       </Link>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="mi-card">
-          <img src={p.image_url} alt={p.name} className="w-full aspect-square object-cover" />
+          <img src={resolveAssetUrl(p.image_url)} alt={p.name} className="w-full aspect-square object-cover" />
         </div>
         <div>
           <div className="text-sm font-nunito text-[#4B5563]">{p.category} · {p.age_range} años</div>

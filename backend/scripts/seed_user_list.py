@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 load_dotenv("/app/backend/.env")
 
-BACKEND_URL = "https://jugueteria-pro.preview.emergentagent.com"
+BACKEND_URL = os.environ.get("PUBLIC_BACKEND_URL", "")
 
 # (page_number, name, price) — exactly as user provided
 PRODUCTS = [
@@ -98,7 +98,7 @@ async def main():
             "name": name,
             "description": "",
             "price": float(price),
-            "image_url": f"{BACKEND_URL}/api/static/products/page-{page_str}.jpg",
+            "image_url": f"/api/static/products/page-{page_str}.jpg",
             "category": "Sin categoría",
             "age_range": "Todas",
             "stock": 10,

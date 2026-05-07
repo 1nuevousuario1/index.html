@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, resolveAssetUrl } from "../lib/api";
 import { Package, Clock, CheckCircle2, Truck } from "lucide-react";
 
 const STATUS_ES = {
@@ -52,7 +52,7 @@ export default function MyOrders() {
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {o.items.map((it, idx) => (
                     <div key={idx} className="flex gap-3 items-center">
-                      <img src={it.image_url} alt={it.name} className="w-14 h-14 rounded-xl object-cover" />
+                      <img src={resolveAssetUrl(it.image_url)} alt={it.name} className="w-14 h-14 rounded-xl object-cover" />
                       <div>
                         <p className="font-fredoka font-semibold text-sm">{it.name}</p>
                         <p className="text-xs text-[#4B5563]">x{it.quantity} · ${it.line_total.toFixed(2)}</p>

@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../lib/CartContext";
 import { useAuth } from "../lib/AuthContext";
+import { resolveAssetUrl } from "../lib/api";
 import { Trash2, ShoppingBag } from "lucide-react";
 
 export default function Cart() {
@@ -29,7 +30,7 @@ export default function Cart() {
             const finalPrice = i.price * (1 - (i.discount_percent || 0) / 100);
             return (
               <div key={i.product_id} className="mi-card p-4 flex gap-4" data-testid={`cart-item-${i.product_id}`}>
-                <img src={i.image_url} alt={i.name} className="w-24 h-24 object-cover rounded-2xl" />
+                <img src={resolveAssetUrl(i.image_url)} alt={i.name} className="w-24 h-24 object-cover rounded-2xl" />
                 <div className="flex-1">
                   <h3 className="font-fredoka font-semibold text-[#1F2937]">{i.name}</h3>
                   <p className="text-[#4CAFEE] font-fredoka font-bold">${finalPrice.toFixed(2)}</p>
