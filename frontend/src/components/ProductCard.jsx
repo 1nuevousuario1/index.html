@@ -46,7 +46,7 @@ export default function ProductCard({ product, index = 0 }) {
         </Link>
         <div className="flex items-baseline gap-2 mt-2">
           <span className="font-fredoka text-xl font-bold text-[#4CAFEE]">
-            ${finalPrice.toFixed(2)}
+            ${finalPrice.toFixed(2)} <span className="text-xs text-[#4B5563] font-nunito">MXN</span>
           </span>
           {discounted && (
             <span className="text-sm text-[#4B5563] line-through">${product.price.toFixed(2)}</span>

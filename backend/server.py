@@ -315,7 +315,7 @@ async def create_checkout(payload: OrderCreate, request: Request, user: dict = D
     cancel_url = f"{host_url}/cart"
     checkout_req = CheckoutSessionRequest(
         amount=float(total),
-        currency="usd",
+        currency="mxn",
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={"order_id": order_id, "user_id": user["id"]},
@@ -346,7 +346,7 @@ async def create_checkout(payload: OrderCreate, request: Request, user: dict = D
         "user_id": user["id"],
         "user_email": user["email"],
         "amount": total,
-        "currency": "usd",
+        "currency": "mxn",
         "payment_status": "initiated",
         "status": "initiated",
         "metadata": {"order_id": order_id, "user_id": user["id"]},
