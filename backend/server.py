@@ -283,11 +283,15 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
 async def create_checkout(payload: OrderCreate, request: Request, user: dict = Depends(get_current_user)):
     if not payload.items:
         raise HTTPException(400, "El carrito está vacío")
-    # Compute subtotal from server-side prices
+    # Batch fetch all products to avoid N+1 query
+    product_ids = [item.product_id for item in payload.items]
+    products = await db.products.find({"id": {"$in": product_ids}}, {"_id": 0}).to_list(len(product_ids))
+    products_map = {p["id"]: p for p in products}
+
     items_detailed = []
     subtotal = 0.0
     for item in payload.items:
-        p = await db.products.find_one({"id": item.product_id}, {"_id": 0})
+        p = products_map.get(item.product_id)
         if not p:
             raise HTTPException(400, f"Producto {item.product_id} no encontrado")
         price = float(p["price"]) * (1 - p.get("discount_percent", 0) / 100)
