@@ -19,6 +19,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MyOrders from "./pages/MyOrders";
 import Rewards from "./pages/Rewards";
+import PrivacyNotice from "./pages/PrivacyNotice";
+import TermsConditions from "./pages/TermsConditions";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -41,6 +43,8 @@ function App() {
                 <Route path="/recompensas" element={<Rewards />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/registro" element={<Register />} />
+                <Route path="/aviso-de-privacidad" element={<PrivacyNotice />} />
+                <Route path="/terminos-y-condiciones" element={<TermsConditions />} />
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
                 <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
                 <Route path="/mis-pedidos" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
