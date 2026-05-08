@@ -649,6 +649,60 @@ async def admin_customers(admin: dict = Depends(require_admin)):
     return users
 
 
+# ------------------ Messages (Customer → Admin) ------------------
+class MessageCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+    phone: Optional[str] = None
+    subject: str = Field(min_length=1, max_length=200)
+    message: str = Field(min_length=1, max_length=2000)
+
+
+@api_router.post("/messages")
+async def send_message(payload: MessageCreate):
+    """Public endpoint - anyone can send a message to admin."""
+    doc = {
+        "id": str(uuid.uuid4()),
+        "name": payload.name.strip(),
+        "email": payload.email.lower(),
+        "phone": payload.phone.strip() if payload.phone else None,
+        "subject": payload.subject.strip(),
+        "message": payload.message.strip(),
+        "is_read": False,
+        "is_archived": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.messages.insert_one(doc)
+    return {"ok": True, "id": doc["id"]}
+
+
+@api_router.get("/admin/messages")
+async def admin_list_messages(admin: dict = Depends(require_admin)):
+    msgs = await db.messages.find(
+        {"is_archived": False}, {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    unread_count = sum(1 for m in msgs if not m.get("is_read"))
+    return {"messages": msgs, "unread_count": unread_count}
+
+
+@api_router.put("/admin/messages/{message_id}/read")
+async def admin_mark_read(message_id: str, admin: dict = Depends(require_admin)):
+    res = await db.messages.update_one(
+        {"id": message_id}, {"$set": {"is_read": True}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(404, "Mensaje no encontrado")
+    return {"ok": True}
+
+
+@api_router.delete("/admin/messages/{message_id}")
+async def admin_delete_message(message_id: str, admin: dict = Depends(require_admin)):
+    res = await db.messages.delete_one({"id": message_id})
+    if res.deleted_count == 0:
+        raise HTTPException(404, "Mensaje no encontrado")
+    return {"ok": True}
+
+
 # ------------------ Seeding ------------------
 SEED_PRODUCTS = [
     {

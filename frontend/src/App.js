@@ -21,10 +21,12 @@ import MyOrders from "./pages/MyOrders";
 import Rewards from "./pages/Rewards";
 import PrivacyNotice from "./pages/PrivacyNotice";
 import TermsConditions from "./pages/TermsConditions";
+import Contact from "./pages/Contact";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminMessages from "./pages/admin/AdminMessages";
 
 function App() {
   return (
@@ -45,6 +47,7 @@ function App() {
                 <Route path="/registro" element={<Register />} />
                 <Route path="/aviso-de-privacidad" element={<PrivacyNotice />} />
                 <Route path="/terminos-y-condiciones" element={<TermsConditions />} />
+                <Route path="/contacto" element={<Contact />} />
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
                 <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
                 <Route path="/mis-pedidos" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
@@ -52,6 +55,7 @@ function App() {
                 <Route path="/admin/pedidos" element={<ProtectedRoute adminOnly><AdminOrders /></ProtectedRoute>} />
                 <Route path="/admin/productos" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />
                 <Route path="/admin/clientes" element={<ProtectedRoute adminOnly><AdminCustomers /></ProtectedRoute>} />
+                <Route path="/admin/mensajes" element={<ProtectedRoute adminOnly><AdminMessages /></ProtectedRoute>} />
               </Routes>
             </main>
             <Footer />

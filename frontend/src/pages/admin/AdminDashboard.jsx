@@ -23,10 +23,11 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-6 py-10" data-testid="admin-dashboard-page">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-fredoka text-4xl font-bold">Panel de Administración</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link to="/admin/pedidos" className="mi-btn-primary" data-testid="admin-orders-link">Pedidos</Link>
           <Link to="/admin/productos" className="mi-btn-yellow" data-testid="admin-products-link">Productos</Link>
           <Link to="/admin/clientes" className="mi-btn-red" data-testid="admin-customers-link">Clientes</Link>
+          <Link to="/admin/mensajes" className="mi-btn-primary bg-[#6BCB77] hover:bg-[#5ab867]" style={{boxShadow: "0 4px 14px rgba(107, 203, 119, 0.3)"}} data-testid="admin-messages-link">📬 Mensajes</Link>
         </div>
       </div>
 
