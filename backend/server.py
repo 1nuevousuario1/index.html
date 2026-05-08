@@ -316,7 +316,7 @@ async def create_checkout(payload: OrderCreate, request: Request, user: dict = D
     webhook_url = f"{str(request.base_url).rstrip('/')}/api/webhook/stripe"
     stripe_checkout = StripeCheckout(api_key=os.environ["STRIPE_API_KEY"], webhook_url=webhook_url)
     success_url = f"{host_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{host_url}/cart"
+    cancel_url = f"{host_url}/carrito"
     checkout_req = CheckoutSessionRequest(
         amount=float(total),
         currency="mxn",
