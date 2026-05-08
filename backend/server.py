@@ -15,6 +15,9 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import bcrypt
 import jwt
+import requests
+from fastapi import UploadFile, File, Header, Query as FQuery
+from fastapi.responses import Response
 
 from emergentintegrations.payments.stripe.checkout import (
     StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
@@ -31,6 +34,85 @@ app = FastAPI(title="Mundo Infantil API")
 api_router = APIRouter(prefix="/api")
 
 JWT_ALGORITHM = "HS256"
+
+# ------------------ Object Storage ------------------
+STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
+APP_NAME = "mundo-infantil"
+_storage_key = None
+
+
+def init_storage():
+    """Initialize storage session. Call once at startup."""
+    global _storage_key
+    if _storage_key:
+        return _storage_key
+    emergent_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not emergent_key:
+        return None
+    try:
+        resp = requests.post(
+            f"{STORAGE_URL}/init",
+            json={"emergent_key": emergent_key},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        _storage_key = resp.json()["storage_key"]
+        return _storage_key
+    except Exception as e:
+        logging.warning(f"Storage init failed: {e}")
+        return None
+
+
+def put_object(path: str, data: bytes, content_type: str) -> dict:
+    """Upload file to object storage."""
+    key = init_storage()
+    if not key:
+        raise HTTPException(500, "Storage no disponible")
+    try:
+        resp = requests.put(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key, "Content-Type": content_type},
+            data=data,
+            timeout=120,
+        )
+        if resp.status_code == 403:
+            # session expired, retry
+            global _storage_key
+            _storage_key = None
+            key = init_storage()
+            resp = requests.put(
+                f"{STORAGE_URL}/objects/{path}",
+                headers={"X-Storage-Key": key, "Content-Type": content_type},
+                data=data,
+                timeout=120,
+            )
+        resp.raise_for_status()
+        return resp.json()
+    except requests.HTTPError as e:
+        raise HTTPException(500, f"Storage error: {e}")
+
+
+def get_object(path: str):
+    """Download file from object storage."""
+    key = init_storage()
+    if not key:
+        raise HTTPException(500, "Storage no disponible")
+    resp = requests.get(
+        f"{STORAGE_URL}/objects/{path}",
+        headers={"X-Storage-Key": key},
+        timeout=60,
+    )
+    if resp.status_code == 403:
+        global _storage_key
+        _storage_key = None
+        key = init_storage()
+        resp = requests.get(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key},
+            timeout=60,
+        )
+    resp.raise_for_status()
+    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 
 def get_jwt_secret() -> str:
@@ -228,6 +310,56 @@ async def logout(response: Response):
 @api_router.get("/auth/me")
 async def me(user: dict = Depends(get_current_user)):
     return user_to_public(user)
+
+
+# ------------------ Image Upload (Admin) ------------------
+ALLOWED_IMG_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
+MIME_BY_EXT = {
+    "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+    "webp": "image/webp", "gif": "image/gif",
+}
+
+
+@api_router.post("/admin/upload-image")
+async def admin_upload_image(file: UploadFile = File(...), admin: dict = Depends(require_admin)):
+    """Admin uploads an image. Returns relative URL to use in product image_url."""
+    if not file.filename:
+        raise HTTPException(400, "Archivo sin nombre")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in ALLOWED_IMG_EXT:
+        raise HTTPException(400, f"Formato no permitido. Usa: {', '.join(ALLOWED_IMG_EXT)}")
+    data = await file.read()
+    if len(data) > 10 * 1024 * 1024:  # 10 MB
+        raise HTTPException(400, "Imagen muy grande (max 10MB)")
+    content_type = MIME_BY_EXT.get(ext, "application/octet-stream")
+    file_id = str(uuid.uuid4())
+    storage_path = f"{APP_NAME}/products/{file_id}.{ext}"
+    put_object(storage_path, data, content_type)
+    # Save record in DB
+    await db.uploads.insert_one({
+        "id": file_id,
+        "storage_path": storage_path,
+        "content_type": content_type,
+        "size": len(data),
+        "uploaded_by": admin["id"],
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    # Return URL that will route through our backend
+    return {
+        "url": f"/api/uploads/{file_id}",
+        "id": file_id,
+    }
+
+
+@api_router.get("/uploads/{file_id}")
+async def serve_upload(file_id: str):
+    """Serve uploaded image publicly (anyone with the URL can view)."""
+    record = await db.uploads.find_one({"id": file_id, "is_deleted": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(404, "Imagen no encontrada")
+    data, ct = get_object(record["storage_path"])
+    return Response(content=data, media_type=record.get("content_type", ct))
 
 
 # ------------------ Product routes ------------------
@@ -608,6 +740,9 @@ SEED_PRODUCTS = [
 
 @app.on_event("startup")
 async def startup():
+    # Init object storage
+    init_storage()
+
     # Indexes
     await db.users.create_index("email", unique=True)
     await db.users.create_index("id", unique=True)
