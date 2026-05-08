@@ -24,11 +24,14 @@ export default function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="font-fredoka font-semibold text-[#1F2937] mb-3">Celular</h4>
+          <h4 className="font-fredoka font-semibold text-[#1F2937] mb-3">Sitio web</h4>
           <ul className="space-y-2 text-sm text-[#4B5563] font-nunito">
             <li className="flex items-center gap-2">
               <Phone size={16} className="text-[#6BCB77]" />
               <a href="tel:8971076125" className="hover:text-[#4CAFEE]">897 107 6125</a>
+            </li>
+            <li className="text-[#4CAFEE] font-fredoka font-semibold">
+              www.mundo-infantil.lat
             </li>
           </ul>
         </div>
