@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/MUNDO-INFANTIL/static/css/main.6b93d820.css",
+    "main.js": "/MUNDO-INFANTIL/static/js/main.57496e83.js",
+    "index.html": "/MUNDO-INFANTIL/index.html",
+    "main.6b93d820.css.map": "/MUNDO-INFANTIL/static/css/main.6b93d820.css.map",
+    "main.57496e83.js.map": "/MUNDO-INFANTIL/static/js/main.57496e83.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6b93d820.css",
+    "static/js/main.57496e83.js"
+  ]
+}
