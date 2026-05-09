@@ -2,6 +2,7 @@
   "name": "mundo-infantil",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://1nuevousuario1.github.io/MUNDO-INFANTIL",
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-accordion": "^1.2.8",
