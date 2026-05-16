@@ -195,7 +195,10 @@ class CartItem(BaseModel):
 
 class OrderCreate(BaseModel):
     items: List[CartItem]
-    shipping_address: str
+    customer_name: str = Field(min_length=1, max_length=100)
+    customer_email: EmailStr
+    customer_phone: str = Field(min_length=1, max_length=20)
+    shipping_address: str = Field(min_length=1)
     origin_url: str
 
 
@@ -412,7 +415,8 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
 
 # ------------------ Orders / Checkout ------------------
 @api_router.post("/orders/checkout")
-async def create_checkout(payload: OrderCreate, request: Request, user: dict = Depends(get_current_user)):
+async def create_checkout(payload: OrderCreate, request: Request):
+    """Public guest checkout - no login required."""
     if not payload.items:
         raise HTTPException(400, "El carrito está vacío")
     # Batch fetch all products to avoid N+1 query
