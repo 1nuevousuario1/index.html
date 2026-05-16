@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../../lib/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../lib/AuthContext";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from "recharts";
-import { Users, DollarSign, ShoppingBag, Bell } from "lucide-react";
+import { Users, DollarSign, ShoppingBag, Bell, LogOut, ShieldCheck, KeyRound } from "lucide-react";
 
 export default function AdminDashboard() {
   const [report, setReport] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const loadPending = () => {
     api.get("/admin/orders/pending-count")
@@ -33,7 +36,14 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-6 py-10" data-testid="admin-dashboard-page">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-4">
-          <h1 className="font-fredoka text-4xl font-bold">Panel de Administración</h1>
+          <div>
+            <h1 className="font-fredoka text-4xl font-bold">Panel de Administración</h1>
+            {user && (
+              <p className="text-sm text-[#4B5563] font-nunito mt-1" data-testid="admin-current-user">
+                Sesión: <strong>{user.name}</strong> · {user.email}
+              </p>
+            )}
+          </div>
           <Link
             to="/admin/pedidos"
             className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FFD93D]/20 hover:bg-[#FFD93D]/35 transition border-2 border-[#FFD93D]/50"
@@ -55,7 +65,21 @@ export default function AdminDashboard() {
           <Link to="/admin/pedidos" className="mi-btn-primary" data-testid="admin-orders-link">Pedidos</Link>
           <Link to="/admin/productos" className="mi-btn-yellow" data-testid="admin-products-link">Productos</Link>
           <Link to="/admin/clientes" className="mi-btn-red" data-testid="admin-customers-link">Clientes</Link>
-          <Link to="/admin/mensajes" className="mi-btn-primary bg-[#6BCB77] hover:bg-[#5ab867]" style={{boxShadow: "0 4px 14px rgba(107, 203, 119, 0.3)"}} data-testid="admin-messages-link">📬 Mensajes</Link>
+          <Link to="/admin/mensajes" className="mi-btn-primary bg-[#6BCB77] hover:bg-[#5ab867]" style={{boxShadow: "0 4px 14px rgba(107, 203, 119, 0.3)"}} data-testid="admin-messages-link">Mensajes</Link>
+          <Link to="/admin/seguridad" className="mi-btn-primary bg-[#9b59b6] hover:bg-[#8a4ba6]" style={{boxShadow: "0 4px 14px rgba(155, 89, 182, 0.3)"}} data-testid="admin-audit-link">
+            <ShieldCheck size={16} className="inline -mt-1 mr-1" /> Seguridad
+          </Link>
+          <Link to="/admin/cambiar-contrasena" className="mi-btn-primary bg-[#34495e] hover:bg-[#2c3e50]" style={{boxShadow: "0 4px 14px rgba(52, 73, 94, 0.3)"}} data-testid="admin-password-link">
+            <KeyRound size={16} className="inline -mt-1 mr-1" /> Contraseña
+          </Link>
+          <button
+            onClick={async () => { await logout(); navigate("/admin/login"); }}
+            className="mi-btn-primary bg-[#FF6B6B] hover:bg-[#e85a5a]"
+            style={{boxShadow: "0 4px 14px rgba(255, 107, 107, 0.3)"}}
+            data-testid="admin-logout-btn"
+          >
+            <LogOut size={16} className="inline -mt-1 mr-1" /> Salir
+          </button>
         </div>
       </div>
 

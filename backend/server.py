@@ -26,7 +26,7 @@ from fastapi.staticfiles import StaticFiles
 
 # ------------------ DB ------------------
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(mongo_url, tz_aware=True)
 db = client[os.environ['DB_NAME']]
 
 # ------------------ App ------------------
@@ -271,35 +271,79 @@ def set_auth_cookie(response: Response, token: str):
 
 
 # ------------------ Auth routes ------------------
-@api_router.post("/auth/register")
-async def register(payload: UserRegister, response: Response):
-    email = payload.email.lower()
-    existing = await db.users.find_one({"email": email})
-    if existing:
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
-    user_id = str(uuid.uuid4())
-    user_doc = {
-        "id": user_id,
+MAX_FAILED_ATTEMPTS = 5
+ATTEMPT_WINDOW_MIN = 15
+LOCKOUT_MIN = 30
+GENERIC_AUTH_ERROR = "Credenciales inválidas"
+
+
+def _client_ip(request: Request) -> str:
+    """Best-effort client IP extraction, respecting common proxy headers."""
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    real = request.headers.get("x-real-ip")
+    if real:
+        return real.strip()
+    return request.client.host if request.client else "unknown"
+
+
+async def _record_attempt(ip: str, email: str, success: bool, reason: str = ""):
+    await db.login_attempts.insert_one({
+        "id": str(uuid.uuid4()),
+        "ip": ip,
         "email": email,
-        "name": payload.name,
-        "password_hash": hash_password(payload.password),
-        "role": "customer",
-        "points": 0,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    await db.users.insert_one(user_doc)
-    token = create_access_token(user_id, email, "customer")
-    set_auth_cookie(response, token)
-    return {"user": user_to_public(user_doc), "token": token}
+        "success": success,
+        "reason": reason,
+        "created_at": datetime.now(timezone.utc),
+    })
+
+
+async def _is_locked_out(ip: str) -> Optional[int]:
+    """Returns remaining lockout seconds, or None if not locked out."""
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(minutes=ATTEMPT_WINDOW_MIN)
+    failed = await db.login_attempts.count_documents({
+        "ip": ip, "success": False, "created_at": {"$gte": window_start}
+    })
+    if failed < MAX_FAILED_ATTEMPTS:
+        return None
+    # Find oldest failed attempt inside the window — lockout valid until oldest_failed + LOCKOUT_MIN
+    last_failed = await db.login_attempts.find(
+        {"ip": ip, "success": False, "created_at": {"$gte": window_start}},
+        {"_id": 0, "created_at": 1}
+    ).sort("created_at", -1).to_list(1)
+    if not last_failed:
+        return None
+    last_time = last_failed[0]["created_at"]
+    unlock_at = last_time + timedelta(minutes=LOCKOUT_MIN)
+    if unlock_at <= now:
+        return None
+    return int((unlock_at - now).total_seconds())
 
 
 @api_router.post("/auth/login")
-async def login(payload: UserLogin, response: Response):
-    email = payload.email.lower()
+async def login(payload: UserLogin, request: Request, response: Response):
+    email = payload.email.lower().strip()
+    ip = _client_ip(request)
+
+    # Brute force protection
+    locked = await _is_locked_out(ip)
+    if locked is not None:
+        minutes = max(1, locked // 60)
+        await _record_attempt(ip, email, False, "locked_out")
+        raise HTTPException(
+            status_code=429,
+            detail=f"Demasiados intentos. Intenta de nuevo en {minutes} minuto(s).",
+        )
+
     user = await db.users.find_one({"email": email})
-    if not user or not verify_password(payload.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Credenciales inválidas")
-    token = create_access_token(user["id"], email, user.get("role", "customer"))
+    if not user or user.get("role") != "admin" or not verify_password(payload.password, user["password_hash"]):
+        await _record_attempt(ip, email, False, "invalid_credentials")
+        raise HTTPException(status_code=401, detail=GENERIC_AUTH_ERROR)
+
+    await _record_attempt(ip, email, True, "ok")
+    token = create_access_token(user["id"], email, user.get("role", "admin"))
     set_auth_cookie(response, token)
     return {"user": user_to_public(user), "token": token}
 
@@ -313,6 +357,33 @@ async def logout(response: Response):
 @api_router.get("/auth/me")
 async def me(user: dict = Depends(get_current_user)):
     return user_to_public(user)
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=10, max_length=128)
+
+
+@api_router.post("/auth/change-password")
+async def change_password(payload: PasswordChange, request: Request, response: Response, user: dict = Depends(get_current_user)):
+    full = await db.users.find_one({"id": user["id"]})
+    if not full or not verify_password(payload.current_password, full["password_hash"]):
+        await _record_attempt(_client_ip(request), user["email"], False, "wrong_current_password")
+        raise HTTPException(status_code=401, detail=GENERIC_AUTH_ERROR)
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"password_hash": hash_password(payload.new_password)}}
+    )
+    # Force re-login by clearing cookie
+    response.delete_cookie("access_token", path="/")
+    return {"ok": True}
+
+
+@api_router.get("/admin/audit-log")
+async def admin_audit_log(admin: dict = Depends(require_admin)):
+    """Last 100 login attempts (success and failed). Admin-only."""
+    rows = await db.login_attempts.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return rows
 
 
 # ------------------ Image Upload (Admin) ------------------
@@ -831,27 +902,53 @@ async def startup():
     await db.products.create_index("id", unique=True)
     await db.orders.create_index("id", unique=True)
     await db.payment_transactions.create_index("session_id", unique=True)
+    await db.login_attempts.create_index("ip")
+    await db.login_attempts.create_index("created_at")
 
-    # Seed admin
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@mundoinfantil.com").lower()
-    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    existing = await db.users.find_one({"email": admin_email})
-    if existing is None:
-        await db.users.insert_one({
-            "id": str(uuid.uuid4()),
-            "email": admin_email,
-            "name": "Admin",
-            "password_hash": hash_password(admin_password),
-            "role": "admin",
-            "points": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-    else:
-        if not verify_password(admin_password, existing["password_hash"]):
-            await db.users.update_one(
-                {"email": admin_email},
-                {"$set": {"password_hash": hash_password(admin_password), "role": "admin"}}
-            )
+    # Seed admin accounts (multi-admin via ADMIN_ACCOUNTS JSON in .env)
+    import json as _json
+    raw_accounts = os.environ.get("ADMIN_ACCOUNTS", "").strip()
+    admin_accounts = []
+    if raw_accounts:
+        try:
+            admin_accounts = _json.loads(raw_accounts)
+        except Exception as e:
+            logging.error(f"ADMIN_ACCOUNTS JSON inválido: {e}")
+            admin_accounts = []
+
+    # Fallback for legacy single-admin .env vars
+    if not admin_accounts:
+        legacy_email = os.environ.get("ADMIN_EMAIL")
+        legacy_pwd = os.environ.get("ADMIN_PASSWORD")
+        if legacy_email and legacy_pwd:
+            admin_accounts = [{"email": legacy_email, "password": legacy_pwd, "name": "Admin"}]
+
+    configured_emails = set()
+    for acc in admin_accounts:
+        email = acc["email"].lower().strip()
+        password = acc["password"]
+        name = acc.get("name", "Admin")
+        configured_emails.add(email)
+        existing = await db.users.find_one({"email": email})
+        if existing is None:
+            await db.users.insert_one({
+                "id": str(uuid.uuid4()),
+                "email": email,
+                "name": name,
+                "password_hash": hash_password(password),
+                "role": "admin",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        else:
+            update = {"role": "admin", "name": name}
+            if not verify_password(password, existing["password_hash"]):
+                update["password_hash"] = hash_password(password)
+            await db.users.update_one({"email": email}, {"$set": update})
+
+    # Remove legacy non-admin users and old admin@mundoinfantil.com (customer accounts no longer used)
+    await db.users.delete_many({"role": {"$ne": "admin"}})
+    if configured_emails:
+        await db.users.delete_many({"role": "admin", "email": {"$nin": list(configured_emails)}})
 
     # Seed products if empty
     count = await db.products.count_documents({})

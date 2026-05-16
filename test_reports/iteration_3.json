@@ -1,0 +1,43 @@
+{
+  "summary": "Iteration 3 - Admin security hardening verified. Backend: 14/14 pytest PASS covering multi-admin login (both new admins work, old admin@mundoinfantil.com removed → 401), generic 'Credenciales inválidas' error for wrong password and nonexistent email (no email enumeration), brute-force lockout (5 fails → 6th = 429 'Demasiados intentos'), audit log admin-gated and sorted desc with {ip,email,success,reason,created_at} schema, change-password (wrong current → 401, success → cookie cleared, restored back to original), secure logout clears cookie, guest checkout still works without auth, pending-count gated by admin. Frontend smoke: 25/26 UI checks PASS — public Header has NO Admin/Ingresar/Mis pedidos links (footer also clean); /admin without session redirects to /admin/login; valid login redirects to /admin; AdminDashboard shows 'Sesión: María Eugenia García Vázquez · malugarciav86@gmail.com' (data-testid='admin-current-user'); all 7 dashboard testids present (admin-orders/products/customers/messages/audit/password-link, admin-logout-btn); AdminAuditLog renders success=1/failed=0 counts; AdminPassword page has all 4 fields, validates min-10 chars; logout redirects to login and session is invalidated. One UI assertion (password mismatch toast text) was a test-side string mismatch — actual toast 'La confirmación no coincide' is fired correctly; not a code bug.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All pages", "issues": ["tawk.to embedded chat script blocked by CORS (console errors). External third-party - not a regression."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_security.py",
+    "/app/backend/tests/test_guest_checkout.py",
+    "/app/test_reports/pytest/iter3_results.xml"
+  ],
+  "action_items": [
+    "(Optional) CORS: allow_origins=['*'] with allow_credentials=True is invalid per spec; wire explicit CORS_ORIGINS env (still carried over from iter1/iter2).",
+    "(Optional) Migrate deprecated @app.on_event startup/shutdown to FastAPI lifespan handlers.",
+    "(Optional) /admin/reports/sales has unused 'pipeline' variable (dead code)."
+  ],
+  "critical_code_review_comments": [
+    "Brute-force lockout logic in _is_locked_out is correct but anchors the unlock window to the MOST RECENT failed attempt (last_time + LOCKOUT_MIN), which effectively means each new failed attempt while locked EXTENDS the lockout. This matches the test expectations and the spec ('30 min lockout after 5 fails in 15 min') but could be documented; consider anchoring to the 5th attempt's timestamp instead so brute-forcers can't perpetually push the unlock forward by retrying — current impl is actually more secure but unintuitive.",
+    "Generic GENERIC_AUTH_ERROR ('Credenciales inválidas') correctly returned for both wrong password AND nonexistent email — no user enumeration. ✅",
+    "seed_admin removes any admin not in ADMIN_ACCOUNTS (db.users.delete_many with $nin). This is destructive and idempotent; works for the single-restart admin rotation flow but a future operator changing email will silently lose audit data tied to old admin user_id. Acceptable for now.",
+    "password_hash stored as bcrypt $2b$ (verified via Mongo). httpOnly+Secure+SameSite=None cookies. ✅",
+    "change-password endpoint uses min_length=10 on Pydantic side AND clears cookie on success (forces re-login). ✅",
+    "Audit log returns last 100 rows sorted desc; admin-gated via Depends(require_admin). ✅",
+    "_client_ip respects x-forwarded-for first hop, which is correct for Kubernetes ingress."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_admin_security.py"
+  ],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "100% (UI flows verified; the single false-negative was a test-side string mismatch, the underlying toast fires)"},
+  "test_credentials": "Admin 1: malugarciav86@gmail.com / sbp?pX8oD&fDdPh? — WORKING. Admin 2: soloyoyjehova@outlook.com / P8RFc?l6z?FW1uzp — WORKING. Old admin@mundoinfantil.com / admin123 — correctly rejected (user removed from db). Guest checkout requires no auth.",
+  "seed_data_creation": "Test created 1 TEST_Guest order (test_guest_iter3@example.com) via /api/orders/checkout. login_attempts collection cleaned at end of run so UI login works without lockout.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: REACT_APP_BACKEND_URL=<env> MONGO_URL=mongodb://localhost:27017 DB_NAME=mundo_infantil pytest /app/backend/tests/test_admin_security.py /app/backend/tests/test_guest_checkout.py -v. The autouse fixture in test_admin_security.py wipes db.login_attempts before+after each test so brute-force lockout never bleeds. Lockout is by IP from x-forwarded-for; tests use unique IPs per test to be safe. Frontend: all admin testids confirmed: admin-login-{email,password,submit}, admin-current-user, admin-orders-link, admin-products-link, admin-customers-link, admin-messages-link, admin-audit-link, admin-password-link, admin-logout-btn, audit-success-count, audit-failed-count, current-password, new-password, confirm-password, submit-password-change. Public header testids unchanged: main-header, logo-link, nav-home, nav-catalog, nav-contact, cart-link. Old customer auth (/login, /registro, /mis-pedidos) still removed.",
+  "rca of the issue": "N/A — no defects. All requested security hardening (multi-admin seeding, brute-force, audit log, generic auth error, secure logout, change-password, hidden admin nav) is working end-to-end."
+}

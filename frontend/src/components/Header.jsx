@@ -1,15 +1,11 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ShoppingCart, LogOut, Shapes } from "lucide-react";
-import { useAuth } from "../lib/AuthContext";
+import { ShoppingCart, Shapes } from "lucide-react";
 import { useCart } from "../lib/CartContext";
 
 export default function Header() {
-  const { user, logout } = useAuth();
   const { count } = useCart();
-  const navigate = useNavigate();
-
-  const isAdmin = user && user.role === "admin";
+  useNavigate(); // hook kept for potential future redirects
 
   return (
     <header
@@ -29,9 +25,6 @@ export default function Header() {
           <NavLink to="/" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} end data-testid="nav-home">Inicio</NavLink>
           <NavLink to="/catalogo" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} data-testid="nav-catalog">Catálogo</NavLink>
           <NavLink to="/contacto" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} data-testid="nav-contact">Contacto</NavLink>
-          {isAdmin && (
-            <NavLink to="/admin" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} data-testid="nav-admin">Admin</NavLink>
-          )}
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">
@@ -43,11 +36,6 @@ export default function Header() {
               </span>
             )}
           </Link>
-          {isAdmin && (
-            <button onClick={async () => { await logout(); navigate("/"); }} className="p-2 rounded-full hover:bg-[#FF6B6B]/10 transition" title="Cerrar sesión admin" data-testid="logout-btn">
-              <LogOut size={20} className="text-[#FF6B6B]" />
-            </button>
-          )}
         </div>
       </div>
     </header>
