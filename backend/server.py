@@ -204,12 +204,12 @@ class OrderCreate(BaseModel):
 
 class Order(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    user_email: str
+    customer_name: str
+    customer_email: str
+    customer_phone: str
     items: List[dict]
     subtotal: float
     total: float
-    points_earned: int = 0
     status: str = "pending"  # pending, paid, processing, shipped, delivered, cancelled
     payment_status: str = "initiated"  # initiated, paid, failed, expired
     session_id: Optional[str] = None
@@ -443,9 +443,12 @@ async def create_checkout(payload: OrderCreate, request: Request):
         })
     subtotal = round(subtotal, 2)
     total = subtotal
-    points_earned = int(total)
 
     order_id = str(uuid.uuid4())
+    customer_email = payload.customer_email.lower()
+    customer_name = payload.customer_name.strip()
+    customer_phone = payload.customer_phone.strip()
+    shipping_address = payload.shipping_address.strip()
 
     # Stripe
     host_url = payload.origin_url.rstrip("/")
@@ -458,22 +461,22 @@ async def create_checkout(payload: OrderCreate, request: Request):
         currency="mxn",
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata={"order_id": order_id, "user_id": user["id"]},
+        metadata={"order_id": order_id, "customer_email": customer_email},
     )
     session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_req)
 
     order_doc = {
         "id": order_id,
-        "user_id": user["id"],
-        "user_email": user["email"],
+        "customer_name": customer_name,
+        "customer_email": customer_email,
+        "customer_phone": customer_phone,
         "items": items_detailed,
         "subtotal": subtotal,
         "total": total,
-        "points_earned": points_earned,
         "status": "pending",
         "payment_status": "initiated",
         "session_id": session.session_id,
-        "shipping_address": payload.shipping_address,
+        "shipping_address": shipping_address,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.orders.insert_one(order_doc)
@@ -483,14 +486,14 @@ async def create_checkout(payload: OrderCreate, request: Request):
         "id": str(uuid.uuid4()),
         "session_id": session.session_id,
         "order_id": order_id,
-        "user_id": user["id"],
-        "user_email": user["email"],
+        "customer_email": customer_email,
+        "customer_name": customer_name,
         "amount": total,
         "currency": "mxn",
         "payment_status": "initiated",
         "status": "initiated",
-        "metadata": {"order_id": order_id, "user_id": user["id"]},
-        "points_credited": False,
+        "metadata": {"order_id": order_id, "customer_email": customer_email},
+        "processed": False,
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
 
@@ -498,7 +501,8 @@ async def create_checkout(payload: OrderCreate, request: Request):
 
 
 @api_router.get("/orders/status/{session_id}")
-async def order_status(session_id: str, request: Request, user: dict = Depends(get_current_user)):
+async def order_status(session_id: str, request: Request):
+    """Public endpoint - guest can poll status using session_id."""
     tx = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
     if not tx:
         raise HTTPException(404, "Transacción no encontrada")
@@ -508,7 +512,7 @@ async def order_status(session_id: str, request: Request, user: dict = Depends(g
     stripe_checkout = StripeCheckout(api_key=os.environ["STRIPE_API_KEY"], webhook_url=webhook_url)
     try:
         status_resp: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
-    except Exception as e:
+    except Exception:
         # Stripe may not have the session ready immediately, or test key limitation
         return {
             "status": tx.get("status", "pending"),
@@ -528,7 +532,7 @@ async def order_status(session_id: str, request: Request, user: dict = Depends(g
     )
 
     # If paid and not yet processed, update order
-    if new_payment_status == "paid" and not tx.get("points_credited", False):
+    if new_payment_status == "paid" and not tx.get("processed", False):
         order = await db.orders.find_one({"id": tx["order_id"]}, {"_id": 0})
         if order:
             await db.orders.update_one(
@@ -537,7 +541,7 @@ async def order_status(session_id: str, request: Request, user: dict = Depends(g
             )
             await db.payment_transactions.update_one(
                 {"session_id": session_id},
-                {"$set": {"points_credited": True}}
+                {"$set": {"processed": True}}
             )
 
     return {
@@ -562,7 +566,7 @@ async def stripe_webhook(request: Request):
 
     if event.payment_status == "paid":
         tx = await db.payment_transactions.find_one({"session_id": event.session_id}, {"_id": 0})
-        if tx and not tx.get("points_credited", False):
+        if tx and not tx.get("processed", False):
             order = await db.orders.find_one({"id": tx["order_id"]}, {"_id": 0})
             if order:
                 await db.orders.update_one(
@@ -571,15 +575,19 @@ async def stripe_webhook(request: Request):
                 )
                 await db.payment_transactions.update_one(
                     {"session_id": event.session_id},
-                    {"$set": {"points_credited": True, "payment_status": "paid", "status": "complete"}}
+                    {"$set": {"processed": True, "payment_status": "paid", "status": "complete"}}
                 )
     return {"received": True}
 
 
-@api_router.get("/orders/mine")
-async def my_orders(user: dict = Depends(get_current_user)):
-    orders = await db.orders.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    return orders
+@api_router.get("/admin/orders/pending-count")
+async def admin_pending_count(admin: dict = Depends(require_admin)):
+    """Count of paid orders not yet shipped/delivered/cancelled - for admin notification bell."""
+    count = await db.orders.count_documents({
+        "payment_status": "paid",
+        "status": {"$in": ["pending", "processing"]}
+    })
+    return {"count": count}
 
 
 # ------------------ Admin ------------------
