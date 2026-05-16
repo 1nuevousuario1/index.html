@@ -60,13 +60,36 @@ export default function Cart() {
           </div>
           <div className="flex justify-between mt-2 font-nunito">
             <span>Envío</span>
-            <span className="text-[#6BCB77] font-bold">Gratis</span>
+            <span className={subtotal >= 2000 ? "text-[#6BCB77] font-bold" : "text-[#4B5563] font-bold"}>
+              {subtotal >= 2000 ? "¡Gratis! 🎉" : "Se calcula al confirmar"}
+            </span>
           </div>
           <div className="flex justify-between mt-4 pt-4 border-t font-fredoka text-xl">
             <span>Total</span>
             <span className="text-[#4CAFEE]">${subtotal.toFixed(2)}</span>
           </div>
           <p className="mt-2 text-sm text-[#4B5563] font-nunito">🎁 Ganarás {Math.floor(subtotal)} puntos</p>
+
+          {/* Política de envío */}
+          <div className="mt-4 p-4 bg-[#FFD93D]/15 rounded-2xl border border-[#FFD93D]/40" data-testid="shipping-info">
+            <p className="font-fredoka font-semibold text-sm text-[#1F2937] mb-2">🚚 Política de envío</p>
+            <ul className="text-xs text-[#4B5563] font-nunito space-y-1.5">
+              <li>📍 <strong>Misma ciudad</strong>: entrega con costo de reparto local</li>
+              <li>🇲🇽 <strong>Otras ciudades</strong>: envíos a toda la República Mexicana</li>
+              {subtotal >= 2000 ? (
+                <li className="text-[#6BCB77] font-bold">✅ Tu compra califica para envío GRATIS</li>
+              ) : (
+                <li>💎 En compras mayores a <strong>$2,000 MXN</strong>, el envío es <strong>GRATIS</strong>
+                  {subtotal > 0 && (
+                    <span className="block mt-1 text-[#FF6B6B]">
+                      Te faltan ${(2000 - subtotal).toFixed(2)} para envío gratis
+                    </span>
+                  )}
+                </li>
+              )}
+            </ul>
+          </div>
+
           <button
             className="mi-btn-primary w-full mt-6"
             onClick={() => (user ? navigate("/checkout") : navigate("/login?redirect=/checkout"))}

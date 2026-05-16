@@ -56,7 +56,7 @@ export default function Home() {
       {/* Features */}
       <section className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
-          { icon: Truck, color: "#4CAFEE", title: "Envío rápido", desc: "Entregas en 24-48 hrs" },
+          { icon: Truck, color: "#4CAFEE", title: "Envío gratis +$2,000", desc: "En compras mayores. Envíos a toda México" },
           { icon: Shield, color: "#6BCB77", title: "Juguetes seguros", desc: "Certificados y probados" },
           { icon: Star, color: "#FFD93D", title: "Gana recompensas", desc: "1 punto por cada $1" },
         ].map((f, i) => (
@@ -73,6 +73,23 @@ export default function Home() {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* Banner política de envío */}
+      <section className="max-w-7xl mx-auto px-6 -mt-4 mb-6">
+        <div className="bg-gradient-to-r from-[#6BCB77] to-[#4CAFEE] rounded-3xl p-6 text-white" data-testid="shipping-banner">
+          <div className="flex items-start gap-4 flex-wrap">
+            <Truck size={40} strokeWidth={2.5} className="flex-shrink-0" />
+            <div className="flex-1 min-w-[200px]">
+              <h3 className="font-fredoka text-2xl font-bold mb-1">🚚 Información de Envíos</h3>
+              <ul className="text-sm space-y-1 font-nunito text-white/95">
+                <li>📍 <strong>Misma ciudad</strong>: entrega con costo de reparto local</li>
+                <li>🇲🇽 <strong>Otras ciudades</strong>: envíos a toda la República Mexicana</li>
+                <li className="font-bold">💎 ¡Envío GRATIS en compras mayores a $2,000 MXN!</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Featured products */}

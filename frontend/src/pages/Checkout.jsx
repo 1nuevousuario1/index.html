@@ -41,6 +41,17 @@ export default function Checkout() {
           onChange={(e) => setAddress(e.target.value)}
           data-testid="shipping-address"
         />
+        <div className="mt-4 p-4 bg-[#4CAFEE]/10 rounded-2xl border border-[#4CAFEE]/30">
+          <p className="font-fredoka font-semibold text-sm text-[#1F2937] mb-2">🚚 Política de envío</p>
+          <ul className="text-xs text-[#4B5563] font-nunito space-y-1">
+            <li>📍 <strong>Misma ciudad (Ciudad Miguel Alemán)</strong>: entrega con costo de reparto local</li>
+            <li>🇲🇽 <strong>Otras ciudades</strong>: envíos a toda la República Mexicana con costo de envío</li>
+            <li className="text-[#6BCB77] font-semibold">💎 En compras mayores a $2,000 MXN, el envío es GRATIS</li>
+          </ul>
+          <p className="mt-2 text-xs text-[#4B5563] italic">
+            El costo exacto de envío se acordará después de tu compra según tu ubicación.
+          </p>
+        </div>
       </div>
 
       <div className="mi-card p-6 mt-6">

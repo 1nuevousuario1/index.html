@@ -92,16 +92,22 @@ export default function TermsConditions() {
           </h2>
           <ul className="list-disc list-inside space-y-2 ml-2">
             <li>
-              <strong>Cobertura:</strong> Realizamos envíos a toda la República Mexicana.
+              <strong>Misma ciudad (Ciudad Miguel Alemán):</strong> La entrega se
+              realiza con costo de reparto local, que se acuerda al confirmar el
+              pedido según la zona.
             </li>
             <li>
-              <strong>Tiempos de entrega:</strong> 24-72 horas hábiles después de
-              confirmado el pago, dependiendo de la ubicación. Zonas rurales pueden
-              tardar hasta 7 días hábiles.
+              <strong>Otras ciudades:</strong> Realizamos envíos a toda la República
+              Mexicana. El costo de envío se calcula según peso y destino.
+            </li>
+            <li className="text-[#6BCB77] font-semibold">
+              🚚 <strong>Envío GRATIS</strong> en compras mayores a $2,000 MXN
+              (aplicable a todo el país).
             </li>
             <li>
-              <strong>Costos:</strong> Los costos de envío se calculan al momento de
-              finalizar la compra, en función del peso y destino.
+              <strong>Tiempos de entrega:</strong> 24-72 horas hábiles dentro de la
+              ciudad. Envíos foráneos: 3-7 días hábiles dependiendo de la ubicación.
+              Zonas rurales pueden tardar hasta 10 días hábiles.
             </li>
             <li>
               Es responsabilidad del cliente proporcionar una dirección correcta y
