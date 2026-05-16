@@ -3,48 +3,69 @@
 ## Problem Statement (Original)
 Sistema para una juguetería en línea donde:
 - El cliente entra a la app y elige productos
-- Realiza un pedido de juguetes
-- El sistema guarda automáticamente la información
-- El personal (o sistema) procesa el pedido
+- Realiza un pedido de juguetes (como invitado, sin crear cuenta)
+- El sistema guarda automáticamente la información (nombre, email, teléfono, dirección)
+- La administradora recibe notificación de pedidos pendientes
+- El personal procesa el pedido (cambiar estado, ver datos del cliente)
 - Se generan reportes de ventas
-- Y además se puede premiar al cliente con puntos o recompensas por sus compras
-Todo está conectado para que el negocio funcione de forma organizada, rápida y automática.
 
 ## User Choices
-- Pagos: Stripe
-- Autenticación: defaults (JWT email/password)
-- Panel admin: defaults (sí, con roles)
-- Recompensas: puntos + niveles (Bronce/Plata/Oro)
-- Diseño: "Mundo Infantil" colorido y amigable con paleta azul, amarillo, rojo suave, verde
+- Pagos: Stripe (MXN)
+- Autenticación: SOLO admin (JWT email/password). Clientes compran como invitados.
+- Panel admin: con campana de notificaciones y conteo de pedidos pendientes
+- Diseño: paleta azul/amarillo/rojo/verde, fuentes Fredoka + Nunito
 
 ## Architecture
-- Backend: FastAPI + Motor (MongoDB), JWT auth, bcrypt, emergentintegrations Stripe Checkout
+- Backend: FastAPI + Motor (MongoDB), JWT auth para admin, bcrypt, emergentintegrations Stripe Checkout
 - Frontend: React 19 + React Router 7, Tailwind, shadcn/ui, sonner toasts, recharts
-- Mongo collections: users, products, orders, payment_transactions
+- Mongo collections: users (admin only), products, orders, payment_transactions, messages, uploads
 
 ## User Personas
-- Cliente: familias/adultos que compran juguetes para niños
-- Admin: personal de la tienda que gestiona productos, pedidos, y consulta reportes
+- Cliente invitado: familia/adulto que compra juguetes sin crear cuenta
+- Admin: personal de la tienda que gestiona productos, pedidos, clientes y mensajes
 
-## Implemented (2026-02-03)
-- Auth: /api/auth/{register,login,logout,me}, roles (customer/admin), admin seeded
-- Productos: CRUD con 12 productos auto-seeded (categorías, edades, descuentos, destacados)
+## Implementadas (acumulado)
+- Auth admin: /api/auth/{login,logout,me} con role=admin seeded
+- Productos: CRUD con seed de 58 productos reales (PDF parsed) y subida de imágenes a Object Storage
 - Carrito: estado persistente en localStorage
-- Checkout Stripe: /api/orders/checkout crea sesión + registro payment_transactions
-- Status polling: /api/orders/status/{session_id} con manejo graceful de errores Stripe
-- Pedidos del cliente: /api/orders/mine
-- Panel admin: /api/admin/orders (+status update), /api/admin/reports/sales, /api/admin/customers
-- Sistema puntos: 1 pt/$1, niveles Bronce(0-99)/Plata(100-499)/Oro(500+)
-- UI: Home con hero + destacados + promo bento, Catálogo con filtros, Detalle producto, Carrito, Checkout, Login/Register, Mis Pedidos, Recompensas con progreso, Panel admin con charts
+- **Checkout invitado** (2026-02): /api/orders/checkout PÚBLICO; payload {items, customer_name, customer_email, customer_phone, shipping_address, origin_url}; crea sesión Stripe MXN y guarda orden con datos del invitado
+- **Status público** (2026-02): /api/orders/status/{session_id} sin auth, polling desde CheckoutSuccess
+- **Notificación admin** (2026-02): /api/admin/orders/pending-count + campana con badge en AdminDashboard (auto-refresh 30s)
+- AdminOrders: fila expandible que muestra nombre/email/teléfono/dirección/productos del invitado
+- AdminCustomers: agregado por email desde colección orders (nombre, teléfono, pedidos, total gastado, última compra)
+- Reportes: /api/admin/reports/sales (ventas por día, top productos, clientes únicos)
+- Mensajes Cliente→Admin: /api/messages público + /api/admin/messages
+- Páginas legales: Aviso de Privacidad + Términos y Condiciones
+- Política de envío visible en Cart/Checkout (envío gratis +$2000 MXN)
+
+## Eliminado en esta iteración
+- Customer login/register (rutas /login, /registro, /mis-pedidos)
+- Sistema de puntos/recompensas/tiers (Bronce/Plata/Oro)
+- Páginas Login.jsx, Register.jsx, MyOrders.jsx, Rewards.jsx
+- Función `register` del AuthContext
 
 ## Backlog
 ### P1
-- Stripe webhook handler verification end-to-end
-- Reviews/ratings de productos
-- Sistema de cupones y códigos de descuento
+- Stripe webhook handler verificación end-to-end con clave real
+- Cupones / códigos de descuento
+- Envío de email automático al cliente cuando se confirma el pago (Resend/SendGrid)
 
 ### P2
-- Lista de deseos
-- Notificaciones email al cambiar estado de pedido
+- Lista de deseos / favoritos por sesión
+- Reseñas de productos
 - Imágenes múltiples por producto
 - Búsqueda avanzada con sugerencias
+
+## Endpoints clave
+- POST /api/auth/login (admin)
+- GET  /api/auth/me (admin)
+- GET  /api/products | /api/products/{id}
+- POST /api/orders/checkout (PÚBLICO - guest)
+- GET  /api/orders/status/{session_id} (PÚBLICO)
+- POST /api/webhook/stripe
+- GET  /api/admin/orders | PUT /api/admin/orders/{id}/status (admin)
+- GET  /api/admin/orders/pending-count (admin)
+- GET  /api/admin/customers (admin)
+- GET  /api/admin/reports/sales (admin)
+- POST /api/messages (público) | GET /api/admin/messages (admin)
+- POST /api/admin/upload-image (admin)
