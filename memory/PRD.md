@@ -25,14 +25,17 @@ Sistema para una juguetería en línea donde:
 - Admin: personal de la tienda que gestiona productos, pedidos, clientes y mensajes
 
 ## Implementadas (acumulado)
-- Auth admin: /api/auth/{login,logout,me} con role=admin seeded
-- Productos: CRUD con seed de 58 productos reales (PDF parsed) y subida de imágenes a Object Storage
+- Auth admin: /api/auth/{login,logout,me,change-password} con multi-admin seeded desde `ADMIN_ACCOUNTS` (JSON) en .env
+- **Seguridad reforzada** (2026-02): brute force 5/15min→30min lockout por IP; audit log `/api/admin/audit-log`; mensaje genérico "Credenciales inválidas" (sin enumeración de emails); cookies httpOnly+Secure+SameSite=None; cambio de contraseña con re-login forzado
+- Productos: CRUD con seed de 58 productos reales y subida de imágenes a Object Storage
 - Carrito: estado persistente en localStorage
 - **Checkout invitado** (2026-02): /api/orders/checkout PÚBLICO; payload {items, customer_name, customer_email, customer_phone, shipping_address, origin_url}; crea sesión Stripe MXN y guarda orden con datos del invitado
 - **Status público** (2026-02): /api/orders/status/{session_id} sin auth, polling desde CheckoutSuccess
 - **Notificación admin** (2026-02): /api/admin/orders/pending-count + campana con badge en AdminDashboard (auto-refresh 30s)
 - AdminOrders: fila expandible que muestra nombre/email/teléfono/dirección/productos del invitado
-- AdminCustomers: agregado por email desde colección orders (nombre, teléfono, pedidos, total gastado, última compra)
+- AdminCustomers: agregado por email desde colección orders
+- AdminAuditLog (/admin/seguridad): muestra últimos 100 intentos de login con conteo de éxitos/fallos
+- AdminPassword (/admin/cambiar-contrasena): cambio de contraseña con confirmación
 - Reportes: /api/admin/reports/sales (ventas por día, top productos, clientes únicos)
 - Mensajes Cliente→Admin: /api/messages público + /api/admin/messages
 - Páginas legales: Aviso de Privacidad + Términos y Condiciones
@@ -42,7 +45,8 @@ Sistema para una juguetería en línea donde:
 - Customer login/register (rutas /login, /registro, /mis-pedidos)
 - Sistema de puntos/recompensas/tiers (Bronce/Plata/Oro)
 - Páginas Login.jsx, Register.jsx, MyOrders.jsx, Rewards.jsx
-- Función `register` del AuthContext
+- Usuario admin@mundoinfantil.com / admin123 (reemplazado por 2 cuentas reales)
+- Link "Admin" del header público (ahora solo visible dentro del propio panel)
 
 ## Backlog
 ### P1
