@@ -15,9 +15,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import MyOrders from "./pages/MyOrders";
+import AdminLogin from "./pages/AdminLogin";
 import PrivacyNotice from "./pages/PrivacyNotice";
 import TermsConditions from "./pages/TermsConditions";
 import Contact from "./pages/Contact";
@@ -41,14 +39,12 @@ function App() {
                 <Route path="/catalogo" element={<Catalog />} />
                 <Route path="/producto/:id" element={<ProductDetail />} />
                 <Route path="/carrito" element={<Cart />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/registro" element={<Register />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout/success" element={<CheckoutSuccess />} />
                 <Route path="/aviso-de-privacidad" element={<PrivacyNotice />} />
                 <Route path="/terminos-y-condiciones" element={<TermsConditions />} />
                 <Route path="/contacto" element={<Contact />} />
-                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
-                <Route path="/mis-pedidos" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+                <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/admin/pedidos" element={<ProtectedRoute adminOnly><AdminOrders /></ProtectedRoute>} />
                 <Route path="/admin/productos" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />

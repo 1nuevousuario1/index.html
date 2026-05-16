@@ -633,8 +633,8 @@ async def admin_sales_report(admin: dict = Depends(require_admin)):
             product_sales[pid]["revenue"] += it["line_total"]
     top_products = sorted(product_sales.values(), key=lambda x: x["revenue"], reverse=True)[:5]
 
-    # Customer count
-    total_customers = await db.users.count_documents({"role": "customer"})
+    # Unique customers (by email) from paid orders
+    total_customers = len({o.get("customer_email") for o in orders if o.get("customer_email")})
 
     return {
         "total_sales": round(total_sales, 2),
@@ -647,8 +647,34 @@ async def admin_sales_report(admin: dict = Depends(require_admin)):
 
 @api_router.get("/admin/customers")
 async def admin_customers(admin: dict = Depends(require_admin)):
-    users = await db.users.find({"role": "customer"}, {"_id": 0, "password_hash": 0, "points": 0}).to_list(500)
-    return users
+    """Aggregate guest customers from orders by email."""
+    pipeline = [
+        {"$match": {"customer_email": {"$ne": None}}},
+        {"$group": {
+            "_id": "$customer_email",
+            "name": {"$last": "$customer_name"},
+            "phone": {"$last": "$customer_phone"},
+            "address": {"$last": "$shipping_address"},
+            "orders_count": {"$sum": 1},
+            "total_spent": {"$sum": {"$cond": [{"$eq": ["$payment_status", "paid"]}, "$total", 0]}},
+            "last_order_at": {"$max": "$created_at"},
+        }},
+        {"$sort": {"last_order_at": -1}},
+        {"$limit": 500},
+    ]
+    rows = await db.orders.aggregate(pipeline).to_list(500)
+    return [
+        {
+            "email": r["_id"],
+            "name": r.get("name") or "",
+            "phone": r.get("phone") or "",
+            "address": r.get("address") or "",
+            "orders_count": r.get("orders_count", 0),
+            "total_spent": round(r.get("total_spent", 0), 2),
+            "last_order_at": r.get("last_order_at"),
+        }
+        for r in rows
+    ]
 
 
 # ------------------ Messages (Customer → Admin) ------------------

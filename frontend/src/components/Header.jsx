@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ShoppingCart, User, LogOut, Package, Shapes } from "lucide-react";
+import { ShoppingCart, LogOut, Shapes } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
 import { useCart } from "../lib/CartContext";
 
@@ -8,6 +8,8 @@ export default function Header() {
   const { user, logout } = useAuth();
   const { count } = useCart();
   const navigate = useNavigate();
+
+  const isAdmin = user && user.role === "admin";
 
   return (
     <header
@@ -27,7 +29,7 @@ export default function Header() {
           <NavLink to="/" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} end data-testid="nav-home">Inicio</NavLink>
           <NavLink to="/catalogo" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} data-testid="nav-catalog">Catálogo</NavLink>
           <NavLink to="/contacto" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} data-testid="nav-contact">Contacto</NavLink>
-          {user && user.role === "admin" && (
+          {isAdmin && (
             <NavLink to="/admin" className={({isActive}) => `hover:text-[#4CAFEE] transition ${isActive ? "text-[#4CAFEE]" : ""}`} data-testid="nav-admin">Admin</NavLink>
           )}
         </nav>
@@ -41,19 +43,10 @@ export default function Header() {
               </span>
             )}
           </Link>
-          {user && user.role ? (
-            <div className="flex items-center gap-2">
-              <Link to="/mis-pedidos" className="hidden sm:flex items-center gap-1 text-sm font-fredoka hover:text-[#4CAFEE]" data-testid="my-orders-link">
-                <Package size={18} /> <span className="hidden lg:inline">Mis pedidos</span>
-              </Link>
-              <button onClick={async () => { await logout(); navigate("/"); }} className="p-2 rounded-full hover:bg-[#FF6B6B]/10 transition" title="Cerrar sesión" data-testid="logout-btn">
-                <LogOut size={20} className="text-[#FF6B6B]" />
-              </button>
-            </div>
-          ) : (
-            <Link to="/login" className="mi-btn-primary text-sm" data-testid="login-link">
-              <User size={16} className="inline mr-1" /> Ingresar
-            </Link>
+          {isAdmin && (
+            <button onClick={async () => { await logout(); navigate("/"); }} className="p-2 rounded-full hover:bg-[#FF6B6B]/10 transition" title="Cerrar sesión admin" data-testid="logout-btn">
+              <LogOut size={20} className="text-[#FF6B6B]" />
+            </button>
           )}
         </div>
       </div>

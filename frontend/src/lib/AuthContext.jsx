@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
       try {
         const { data } = await api.get("/auth/me");
         setUser(data);
-      } catch (e) {
+      } catch {
         setUser(false);
       } finally {
         setLoading(false);
@@ -31,32 +31,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (name, email, password) => {
-    try {
-      const { data } = await api.post("/auth/register", { name, email, password });
-      if (data.token) localStorage.setItem("mi_token", data.token);
-      setUser(data.user);
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: formatApiErrorDetail(e.response?.data?.detail) || e.message };
-    }
-  };
-
   const logout = async () => {
     try { await api.post("/auth/logout"); } catch {}
     localStorage.removeItem("mi_token");
     setUser(false);
   };
 
-  const refreshMe = async () => {
-    try {
-      const { data } = await api.get("/auth/me");
-      setUser(data);
-    } catch {}
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshMe }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

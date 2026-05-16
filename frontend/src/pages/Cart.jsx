@@ -1,13 +1,11 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../lib/CartContext";
-import { useAuth } from "../lib/AuthContext";
 import { resolveAssetUrl } from "../lib/api";
 import { Trash2, ShoppingBag } from "lucide-react";
 
 export default function Cart() {
   const { items, updateQty, removeItem, subtotal } = useCart();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   if (items.length === 0) {
@@ -92,10 +90,10 @@ export default function Cart() {
 
           <button
             className="mi-btn-primary w-full mt-6"
-            onClick={() => (user ? navigate("/checkout") : navigate("/login?redirect=/checkout"))}
+            onClick={() => navigate("/checkout")}
             data-testid="checkout-btn"
           >
-            {user ? "Finalizar compra" : "Inicia sesión para pagar"}
+            Finalizar compra
           </button>
         </div>
       </div>

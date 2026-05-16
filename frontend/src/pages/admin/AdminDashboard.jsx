@@ -2,13 +2,23 @@ import React, { useEffect, useState } from "react";
 import { api } from "../../lib/api";
 import { Link } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from "recharts";
-import { Package, Users, DollarSign, ShoppingBag } from "lucide-react";
+import { Users, DollarSign, ShoppingBag, Bell } from "lucide-react";
 
 export default function AdminDashboard() {
   const [report, setReport] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const loadPending = () => {
+    api.get("/admin/orders/pending-count")
+      .then(({ data }) => setPendingCount(data.count || 0))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     api.get("/admin/reports/sales").then(({ data }) => setReport(data));
+    loadPending();
+    const interval = setInterval(loadPending, 30000); // refresh every 30s
+    return () => clearInterval(interval);
   }, []);
 
   if (!report) return <div className="p-20 text-center font-fredoka">Cargando reportes...</div>;
@@ -22,7 +32,25 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-10" data-testid="admin-dashboard-page">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-fredoka text-4xl font-bold">Panel de Administración</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="font-fredoka text-4xl font-bold">Panel de Administración</h1>
+          <Link
+            to="/admin/pedidos"
+            className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FFD93D]/20 hover:bg-[#FFD93D]/35 transition border-2 border-[#FFD93D]/50"
+            title={pendingCount > 0 ? `${pendingCount} pedido(s) pendiente(s)` : "Sin pedidos pendientes"}
+            data-testid="pending-orders-bell"
+          >
+            <Bell size={22} className="text-[#8a6b00]" />
+            {pendingCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 bg-[#FF6B6B] text-white text-xs font-bold rounded-full min-w-[22px] h-[22px] px-1 flex items-center justify-center shadow-md animate-pulse"
+                data-testid="pending-orders-badge"
+              >
+                {pendingCount}
+              </span>
+            )}
+          </Link>
+        </div>
         <div className="flex gap-2 flex-wrap">
           <Link to="/admin/pedidos" className="mi-btn-primary" data-testid="admin-orders-link">Pedidos</Link>
           <Link to="/admin/productos" className="mi-btn-yellow" data-testid="admin-products-link">Productos</Link>
@@ -30,6 +58,16 @@ export default function AdminDashboard() {
           <Link to="/admin/mensajes" className="mi-btn-primary bg-[#6BCB77] hover:bg-[#5ab867]" style={{boxShadow: "0 4px 14px rgba(107, 203, 119, 0.3)"}} data-testid="admin-messages-link">📬 Mensajes</Link>
         </div>
       </div>
+
+      {pendingCount > 0 && (
+        <div className="mt-6 p-4 rounded-2xl bg-[#FF6B6B]/10 border border-[#FF6B6B]/30 flex items-center gap-3" data-testid="pending-orders-alert">
+          <Bell size={20} className="text-[#FF6B6B]" />
+          <p className="font-fredoka text-[#1F2937]">
+            Tienes <strong className="text-[#FF6B6B]">{pendingCount}</strong> pedido(s) pagado(s) por procesar.
+          </p>
+          <Link to="/admin/pedidos" className="ml-auto mi-btn-red text-sm">Ver pedidos</Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
         {stats.map((s, i) => (

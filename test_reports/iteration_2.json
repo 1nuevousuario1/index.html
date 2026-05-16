@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 2 - Full regression for guest-only checkout + admin auth flow. Backend: 18/18 pytest PASS (guest checkout creates Stripe session, validates email/cart/product, public status endpoint, removed /orders/mine returns 404, admin auth gates pending-count/orders/customers, admin endpoints return guest customer fields). Frontend: Home loads with NO login/register links in header; cart → /checkout directly (no auth gate); checkout form has all 5 data-testids and validates invalid email with toast 'Ingresa un email válido'; admin login works; AdminDashboard shows pending-orders-bell; AdminOrders shows customer name/email and row-expand reveals order-email/phone/address testids; removed routes (/login, /registro, /mis-pedidos) render empty (no route match).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/orders/status/{session_id}", "issue": "Falls back to {status:pending} when Stripe test session not retrievable (emergent test key). Endpoint correctly returns 200 with fallback payload - acceptable but note 'Stripe limitation' from iteration 1 is now gracefully handled."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin Dashboard", "issues": ["'Pedidos pagados' and 'Clientes' tiles show 0 even though guest orders exist (because none are payment_status=paid yet). Acceptable; sales/customers metrics correctly only count paid. Consider also showing total orders/initiated count for visibility."]},
+      {"screen": "All pages", "issues": ["Third-party tawk.to chat widget blocked by CORS (console errors). Not a regression - external service config issue."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_guest_checkout.py",
+    "/app/test_reports/pytest/iter2_results.xml"
+  ],
+  "action_items": [
+    "(Optional/low) Dashboard could surface count of 'pending' (initiated) orders alongside paid count so admin sees real activity.",
+    "(Optional) CORS allow_origins='*' with allow_credentials=True is invalid per spec - already flagged in iter1, still present in server.py."
+  ],
+  "critical_code_review_comments": [
+    "server.py: /admin/reports/sales has unused 'pipeline' variable (dead code).",
+    "server.py: on_event startup/shutdown still uses deprecated FastAPI events - migrate to lifespan.",
+    "server.py CORS: allow_origins=['*'] with allow_credentials=True is rejected by browsers per spec; should use explicit CORS_ORIGINS env from .env (CORS_ORIGINS='*' is read but not used).",
+    "server.py: /orders/status falls back to pending on Stripe exception - good resilience but logs swallow the error. Add logger.warning for debugging.",
+    "bcrypt used ($2b$ hashes confirmed), httpOnly secure cookies set with samesite='none' - correct for cross-site admin login.",
+    "seed_admin updates password if env password changes - idempotent and matches playbook.",
+    "Tests fixture for 'http' session reuses cookies across tests; introduced 'fresh_session' fixture for unauthenticated assertions - documented for future agents."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_guest_checkout.py"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "100% of testable flows (Stripe redirect not automatable)"},
+  "test_credentials": "Admin: admin@mundoinfantil.com / admin123 - WORKING. No customer auth (removed by design).",
+  "seed_data_creation": "Several TEST_ prefixed orders created in MongoDB during checkout tests (test_guest@example.com, adminview@test.com, custagg@test.com, status@example.com, noauth@example.com, pending@test.com). Pending-count test cleans up its own paid order; other test orders remain as payment_status='initiated' and don't affect bell counts.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests live in /app/backend/tests/test_guest_checkout.py (pytest). All 18 pass. Use 'fresh_session' fixture for unauthenticated assertions; 'http' session shares admin cookie after first auth. To test bell badge>0 visually, insert order via mongo with payment_status='paid' status='pending' (see test_admin_pending_count_returns_count). Stripe test key works for session creation but cannot complete redirects in automation. Frontend testids confirmed: checkout-{name,email,phone,address}, pay-now-btn, checkout-btn, pending-orders-bell, pending-orders-badge, pending-orders-alert, order-{email,phone,address}-{id}, admin-login-{email,password,submit}.",
+  "rca of the issue": "N/A - no regressions. Previous iteration 1 reported /api/orders/checkout broken due to removed user variable; verified fixed in this run. Customer auth (/login, /registro, /mis-pedidos) successfully removed - routes no longer render. Stripe status endpoint now has try/except fallback so it no longer 500s."
+}
