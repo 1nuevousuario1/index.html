@@ -29,17 +29,25 @@ Sistema para una juguetería en línea donde:
 - **Seguridad reforzada** (2026-02): brute force 5/15min→30min lockout por IP; audit log `/api/admin/audit-log`; mensaje genérico "Credenciales inválidas" (sin enumeración de emails); cookies httpOnly+Secure+SameSite=None; cambio de contraseña con re-login forzado
 - Productos: CRUD con seed de 58 productos reales y subida de imágenes a Object Storage
 - Carrito: estado persistente en localStorage
-- **Checkout invitado** (2026-02): /api/orders/checkout PÚBLICO; payload {items, customer_name, customer_email, customer_phone, shipping_address, origin_url}; crea sesión Stripe MXN y guarda orden con datos del invitado
+- **Checkout invitado** (2026-02): /api/orders/checkout PÚBLICO; payload {items, customer_name, customer_email, customer_phone, shipping_address, origin_url, coupon_code?}; crea sesión Stripe MXN y guarda orden con datos del invitado
 - **Status público** (2026-02): /api/orders/status/{session_id} sin auth, polling desde CheckoutSuccess
 - **Notificación admin** (2026-02): /api/admin/orders/pending-count + campana con badge en AdminDashboard (auto-refresh 30s)
 - AdminOrders: fila expandible que muestra nombre/email/teléfono/dirección/productos del invitado
 - AdminCustomers: agregado por email desde colección orders
 - AdminAuditLog (/admin/seguridad): muestra últimos 100 intentos de login con conteo de éxitos/fallos
 - AdminPassword (/admin/cambiar-contrasena): cambio de contraseña con confirmación
+- **Cupones** (2026-02): /api/admin/coupons CRUD + /api/coupons/validate público + /admin/cupones panel UI. Tipos: percent | fixed. Soporta min_purchase, expires_at, usage_limit, active. REGLA: aplica solo a productos sin oferta (no descuento sobre descuento). Incremento de times_used al confirmar el pago.
+- **Email automático** (estructura lista, falta API key): notify_admin_new_order via Resend REST API se dispara desde _mark_order_paid cuando un pedido pasa a paid. Variables: RESEND_API_KEY, RESEND_FROM_EMAIL, ADMIN_NOTIFICATION_EMAILS. Si API key vacía, se omite silenciosamente sin romper el flujo de pago.
 - Reportes: /api/admin/reports/sales (ventas por día, top productos, clientes únicos)
 - Mensajes Cliente→Admin: /api/messages público + /api/admin/messages
 - Páginas legales: Aviso de Privacidad + Términos y Condiciones
 - Política de envío visible en Cart/Checkout (envío gratis +$2000 MXN)
+
+## Pendiente para producción (P0)
+- Resend: cliente debe crear API key en resend.com y guardarla en variable de producción RESEND_API_KEY (y opcionalmente verificar dominio mundo-infantil.lat para usar from email propio)
+- Stripe LIVE: cliente debe pasar sk_live_... y configurar webhook secret real en STRIPE_WEBHOOK_SECRET; URL del webhook a registrar: https://jugueteria-pro.emergent.host/api/webhook/stripe
+- En variables de entorno de producción: ADMIN_ACCOUNTS debe coincidir con preview; eliminar ADMIN_EMAIL y ADMIN_PASSWORD viejos
+- Redeploy desde "Save & Deploy"
 
 ## Eliminado en esta iteración
 - Customer login/register (rutas /login, /registro, /mis-pedidos)
