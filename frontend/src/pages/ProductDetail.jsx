@@ -54,9 +54,6 @@ export default function ProductDetail() {
               <ShoppingCart size={18} /> Agregar al carrito
             </button>
           </div>
-          <p className="mt-4 text-sm text-[#4B5563] font-nunito">
-            🎁 Ganarás <strong>{Math.floor(finalPrice * qty)} puntos</strong> con esta compra
-          </p>
         </div>
       </div>
     </div>

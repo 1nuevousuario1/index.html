@@ -523,17 +523,13 @@ async def order_status(session_id: str, request: Request, user: dict = Depends(g
         {"$set": {"status": new_status, "payment_status": new_payment_status}}
     )
 
-    # If paid and points not yet credited, credit them now
+    # If paid and not yet processed, update order
     if new_payment_status == "paid" and not tx.get("points_credited", False):
         order = await db.orders.find_one({"id": tx["order_id"]}, {"_id": 0})
         if order:
             await db.orders.update_one(
                 {"id": order["id"]},
                 {"$set": {"payment_status": "paid", "status": "processing"}}
-            )
-            await db.users.update_one(
-                {"id": order["user_id"]},
-                {"$inc": {"points": order.get("points_earned", 0)}}
             )
             await db.payment_transactions.update_one(
                 {"session_id": session_id},
@@ -568,10 +564,6 @@ async def stripe_webhook(request: Request):
                 await db.orders.update_one(
                     {"id": order["id"]},
                     {"$set": {"payment_status": "paid", "status": "processing"}}
-                )
-                await db.users.update_one(
-                    {"id": order["user_id"]},
-                    {"$inc": {"points": order.get("points_earned", 0)}}
                 )
                 await db.payment_transactions.update_one(
                     {"session_id": event.session_id},
@@ -643,9 +635,7 @@ async def admin_sales_report(admin: dict = Depends(require_admin)):
 
 @api_router.get("/admin/customers")
 async def admin_customers(admin: dict = Depends(require_admin)):
-    users = await db.users.find({"role": "customer"}, {"_id": 0, "password_hash": 0}).to_list(500)
-    for u in users:
-        u["tier"] = compute_tier(u.get("points", 0))
+    users = await db.users.find({"role": "customer"}, {"_id": 0, "password_hash": 0, "points": 0}).to_list(500)
     return users
 
 

@@ -14,8 +14,7 @@ export default function AdminCustomers() {
             <tr>
               <th className="p-4">Nombre</th>
               <th className="p-4">Email</th>
-              <th className="p-4">Puntos</th>
-              <th className="p-4">Nivel</th>
+              <th className="p-4">Fecha de registro</th>
             </tr>
           </thead>
           <tbody className="font-nunito">
@@ -23,11 +22,12 @@ export default function AdminCustomers() {
               <tr key={c.id} className="border-t border-[#E5E7EB]">
                 <td className="p-4">{c.name}</td>
                 <td className="p-4">{c.email}</td>
-                <td className="p-4 font-fredoka font-bold text-[#FFD93D]">{c.points || 0}</td>
-                <td className="p-4"><span className="mi-badge bg-[#4CAFEE]/20 text-[#3B9AD0]">{c.tier}</span></td>
+                <td className="p-4 text-sm text-[#4B5563]">
+                  {c.created_at ? new Date(c.created_at).toLocaleDateString("es-MX") : "-"}
+                </td>
               </tr>
             ))}
-            {customers.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-[#4B5563]">Sin clientes</td></tr>}
+            {customers.length === 0 && <tr><td colSpan={3} className="p-8 text-center text-[#4B5563]">Sin clientes</td></tr>}
           </tbody>
         </table>
       </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import ProductCard from "../components/ProductCard";
 import { Link } from "react-router-dom";
-import { Truck, Shield, Gift, Sparkles, Award, Star } from "lucide-react";
+import { Truck, Shield, Sparkles } from "lucide-react";
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
@@ -31,14 +31,14 @@ export default function Home() {
               Encuentra los mejores juguetes para <span className="text-[#FFD93D]">todas las edades</span>
             </h1>
             <p className="mt-5 text-lg text-white/95 font-nunito drop-shadow">
-              Diversión garantizada · Envío rápido · Puntos en cada compra
+              Diversión garantizada · Envío rápido · Hasta 20% de descuento
             </p>
             <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-3">
               <Link to="/catalogo" className="mi-btn-yellow" data-testid="explore-catalog-btn">
                 Explorar Catálogo
               </Link>
-              <Link to="/recompensas" className="mi-btn-red">
-                <Gift size={16} className="inline mr-1" /> Gana puntos
+              <Link to="/contacto" className="mi-btn-red">
+                Contáctanos
               </Link>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function Home() {
         {[
           { icon: Truck, color: "#4CAFEE", title: "Envío gratis +$2,000", desc: "En compras mayores. Envíos a toda México" },
           { icon: Shield, color: "#6BCB77", title: "Juguetes seguros", desc: "Certificados y probados" },
-          { icon: Star, color: "#FFD93D", title: "Gana recompensas", desc: "1 punto por cada $1" },
+          { icon: Sparkles, color: "#FFD93D", title: "Marcas favoritas", desc: "LEGO, Peppa Pig, Paw Patrol y más" },
         ].map((f, i) => (
           <div key={i} className="mi-card p-6 flex items-start gap-4" data-testid={`feature-${i}`}>
             <div
@@ -122,13 +122,13 @@ export default function Home() {
             <Sparkles className="absolute right-8 top-8 opacity-30" size={80} />
           </div>
           <div className="rounded-3xl p-8 text-white" style={{ background: "linear-gradient(135deg, #FF6B6B, #FF9E6B)" }}>
-            <Award size={40} className="mb-3" />
-            <h3 className="font-fredoka text-2xl font-bold">Club Mundo Infantil</h3>
+            <Truck size={40} className="mb-3" />
+            <h3 className="font-fredoka text-2xl font-bold">Envío gratis</h3>
             <p className="mt-2 font-nunito text-white/90 text-sm">
-              Niveles Bronce, Plata y Oro con beneficios exclusivos.
+              En compras mayores a $2,000 MXN a toda la República Mexicana.
             </p>
-            <Link to="/recompensas" className="mi-btn-yellow inline-block mt-5 text-sm">
-              Conoce más
+            <Link to="/catalogo" className="mi-btn-yellow inline-block mt-5 text-sm">
+              Empieza a comprar
             </Link>
           </div>
         </div>

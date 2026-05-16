@@ -18,7 +18,6 @@ import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MyOrders from "./pages/MyOrders";
-import Rewards from "./pages/Rewards";
 import PrivacyNotice from "./pages/PrivacyNotice";
 import TermsConditions from "./pages/TermsConditions";
 import Contact from "./pages/Contact";
@@ -42,7 +41,6 @@ function App() {
                 <Route path="/catalogo" element={<Catalog />} />
                 <Route path="/producto/:id" element={<ProductDetail />} />
                 <Route path="/carrito" element={<Cart />} />
-                <Route path="/recompensas" element={<Rewards />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/registro" element={<Register />} />
                 <Route path="/aviso-de-privacidad" element={<PrivacyNotice />} />

@@ -51,10 +51,7 @@ export default function CheckoutSuccess() {
         <>
           <CheckCircle2 size={80} className="mx-auto text-[#6BCB77]" />
           <h1 className="font-fredoka text-4xl font-bold mt-4">¡Pago exitoso!</h1>
-          <p className="text-[#4B5563] font-nunito mt-2">Gracias por tu compra de ${amount.toFixed(2)}</p>
-          <p className="text-sm text-[#FFD93D]/90 bg-[#FFD93D]/20 border border-[#FFD93D] px-4 py-2 rounded-full inline-block mt-4 font-fredoka text-[#1F2937]">
-            🌟 Ganaste {Math.floor(amount)} puntos
-          </p>
+          <p className="text-[#4B5563] font-nunito mt-2">Gracias por tu compra de ${amount.toFixed(2)} MXN</p>
           <div className="flex gap-3 justify-center mt-8">
             <Link to="/mis-pedidos" className="mi-btn-primary">Ver mis pedidos</Link>
             <Link to="/catalogo" className="mi-btn-yellow">Seguir comprando</Link>

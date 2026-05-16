@@ -178,30 +178,7 @@ export default function TermsConditions() {
 
         <section>
           <h2 className="font-fredoka text-2xl font-bold text-[#FF6B6B] mb-3">
-            8. Programa de Recompensas
-          </h2>
-          <ul className="list-disc list-inside space-y-2 ml-2">
-            <li>
-              Los puntos se acumulan a razón de <strong>1 punto por cada $1 MXN</strong>
-              en compras pagadas.
-            </li>
-            <li>
-              Los niveles (Bronce, Plata, Oro) y sus beneficios son determinados por
-              Mundo Infantil y pueden modificarse con previo aviso.
-            </li>
-            <li>
-              Los puntos no son canjeables por dinero, no son transferibles entre
-              cuentas y pueden expirar después de 12 meses sin actividad.
-            </li>
-            <li>
-              Las devoluciones de productos descuentan los puntos correspondientes.
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="font-fredoka text-2xl font-bold text-[#FF6B6B] mb-3">
-            9. Propiedad Intelectual
+            8. Propiedad Intelectual
           </h2>
           <p className="leading-relaxed">
             Todo el contenido del Sitio (textos, imágenes, logotipos, diseño) es
@@ -218,7 +195,7 @@ export default function TermsConditions() {
 
         <section>
           <h2 className="font-fredoka text-2xl font-bold text-[#FF6B6B] mb-3 flex items-center gap-2">
-            <AlertCircle size={24} /> 10. Limitación de Responsabilidad
+            <AlertCircle size={24} /> 9. Limitación de Responsabilidad
           </h2>
           <p className="leading-relaxed">
             Mundo Infantil no se hace responsable por:
@@ -233,7 +210,7 @@ export default function TermsConditions() {
 
         <section>
           <h2 className="font-fredoka text-2xl font-bold text-[#FF6B6B] mb-3 flex items-center gap-2">
-            <Scale size={24} /> 11. Legislación y Jurisdicción
+            <Scale size={24} /> 10. Legislación y Jurisdicción
           </h2>
           <p className="leading-relaxed">
             Para todo lo relacionado con la interpretación y cumplimiento de los
@@ -247,7 +224,7 @@ export default function TermsConditions() {
 
         <section>
           <h2 className="font-fredoka text-2xl font-bold text-[#FF6B6B] mb-3">
-            12. Contacto y Atención al Cliente
+            11. Contacto y Atención al Cliente
           </h2>
           <p className="leading-relaxed mb-3">
             Para cualquier duda, queja o aclaración:

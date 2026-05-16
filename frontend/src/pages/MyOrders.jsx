@@ -62,7 +62,7 @@ export default function MyOrders() {
                 </div>
                 {o.payment_status === "paid" && (
                   <p className="mt-3 text-sm text-[#6BCB77] font-fredoka">
-                    🌟 Ganaste {o.points_earned} puntos
+                    ✅ Pago confirmado
                   </p>
                 )}
               </div>

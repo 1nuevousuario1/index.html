@@ -68,7 +68,7 @@ export default function Cart() {
             <span>Total</span>
             <span className="text-[#4CAFEE]">${subtotal.toFixed(2)}</span>
           </div>
-          <p className="mt-2 text-sm text-[#4B5563] font-nunito">🎁 Ganarás {Math.floor(subtotal)} puntos</p>
+          <p className="mt-2 text-sm text-[#4B5563] font-nunito">💳 Pago seguro con tarjeta</p>
 
           {/* Política de envío */}
           <div className="mt-4 p-4 bg-[#FFD93D]/15 rounded-2xl border border-[#FFD93D]/40" data-testid="shipping-info">
