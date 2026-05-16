@@ -26,6 +26,7 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminPassword from "./pages/admin/AdminPassword";
+import AdminCoupons from "./pages/admin/AdminCoupons";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
                 <Route path="/admin/mensajes" element={<ProtectedRoute adminOnly><AdminMessages /></ProtectedRoute>} />
                 <Route path="/admin/seguridad" element={<ProtectedRoute adminOnly><AdminAuditLog /></ProtectedRoute>} />
                 <Route path="/admin/cambiar-contrasena" element={<ProtectedRoute adminOnly><AdminPassword /></ProtectedRoute>} />
+                <Route path="/admin/cupones" element={<ProtectedRoute adminOnly><AdminCoupons /></ProtectedRoute>} />
               </Routes>
             </main>
             <Footer />

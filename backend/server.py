@@ -119,6 +119,119 @@ def get_jwt_secret() -> str:
     return os.environ["JWT_SECRET"]
 
 
+# ------------------ Email notifications ------------------
+RESEND_API_URL = "https://api.resend.com/emails"
+
+
+def _format_order_email_html(order: dict) -> str:
+    """Build HTML body for new-order email."""
+    items_rows = "".join(
+        f"""
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #eee;">{it['name']}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">{it['quantity']}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${it['unit_price']:.2f}</td>
+          <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;font-weight:bold;">${it['line_total']:.2f}</td>
+        </tr>
+        """
+        for it in order.get("items", [])
+    )
+    discount_row = ""
+    if order.get("discount", 0) > 0:
+        discount_row = f"""
+        <tr>
+          <td colspan="3" style="padding:8px;text-align:right;color:#6BCB77;">Descuento ({order.get('coupon_code', '')}):</td>
+          <td style="padding:8px;text-align:right;color:#6BCB77;font-weight:bold;">−${order['discount']:.2f}</td>
+        </tr>
+        """
+    created = order.get("created_at", "")
+    if isinstance(created, str):
+        try:
+            created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            created = created_dt.strftime("%d/%m/%Y %H:%M")
+        except Exception:
+            pass
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:24px;color:#1F2937;">
+      <h1 style="color:#4CAFEE;margin:0 0 8px;">🛍️ ¡Nuevo pedido pagado!</h1>
+      <p style="color:#4B5563;margin:0 0 24px;">Pedido <strong>#{order['id'][:8]}</strong> · {created}</p>
+
+      <h3 style="color:#FF6B6B;margin:24px 0 8px;">Datos del cliente</h3>
+      <p style="margin:4px 0;"><strong>Nombre:</strong> {order.get('customer_name', '—')}</p>
+      <p style="margin:4px 0;"><strong>Email:</strong> {order.get('customer_email', '—')}</p>
+      <p style="margin:4px 0;"><strong>Teléfono:</strong> {order.get('customer_phone', '—')}</p>
+      <p style="margin:4px 0;"><strong>Dirección de envío:</strong><br>{order.get('shipping_address', '—')}</p>
+
+      <h3 style="color:#FF6B6B;margin:24px 0 8px;">Productos</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead>
+          <tr style="background:#F9F9F9;">
+            <th style="padding:8px;text-align:left;">Producto</th>
+            <th style="padding:8px;text-align:center;">Cant.</th>
+            <th style="padding:8px;text-align:right;">Unitario</th>
+            <th style="padding:8px;text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items_rows}
+          <tr>
+            <td colspan="3" style="padding:8px;text-align:right;">Subtotal:</td>
+            <td style="padding:8px;text-align:right;">${order.get('subtotal', 0):.2f}</td>
+          </tr>
+          {discount_row}
+          <tr style="background:#4CAFEE;color:white;">
+            <td colspan="3" style="padding:12px;text-align:right;font-size:16px;font-weight:bold;">TOTAL PAGADO:</td>
+            <td style="padding:12px;text-align:right;font-size:16px;font-weight:bold;">${order.get('total', 0):.2f} MXN</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:32px;color:#4B5563;font-size:13px;">
+        Entra al panel para procesar este pedido.<br>
+        — Mundo Infantil
+      </p>
+    </div>
+    """
+
+
+async def notify_admin_new_order(order: dict):
+    """Send email notification to all admins when a new order is paid.
+    Best-effort: logs but does not raise on failure.
+    """
+    api_key = os.environ.get("RESEND_API_KEY")
+    if not api_key:
+        logging.info("RESEND_API_KEY not set, skipping admin email notification")
+        return
+    raw_recipients = os.environ.get("ADMIN_NOTIFICATION_EMAILS", "")
+    recipients = [e.strip() for e in raw_recipients.split(",") if e.strip()]
+    if not recipients:
+        logging.info("ADMIN_NOTIFICATION_EMAILS not set, skipping admin email")
+        return
+    from_email = os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+    subject = f"🛍️ Nuevo pedido #{order['id'][:8]} - ${order.get('total', 0):.2f} MXN"
+    html = _format_order_email_html(order)
+    payload = {
+        "from": from_email,
+        "to": recipients,
+        "subject": subject,
+        "html": html,
+        "reply_to": order.get("customer_email"),
+    }
+    try:
+        resp = requests.post(
+            RESEND_API_URL,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=15,
+        )
+        if resp.status_code >= 400:
+            logging.warning(f"Resend error {resp.status_code}: {resp.text}")
+        else:
+            logging.info(f"Notification email sent for order {order['id']} to {recipients}")
+    except Exception as e:
+        logging.warning(f"Resend request failed: {e}")
+
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
@@ -200,6 +313,7 @@ class OrderCreate(BaseModel):
     customer_phone: str = Field(min_length=1, max_length=20)
     shipping_address: str = Field(min_length=1)
     origin_url: str
+    coupon_code: Optional[str] = None
 
 
 class Order(BaseModel):
@@ -209,12 +323,31 @@ class Order(BaseModel):
     customer_phone: str
     items: List[dict]
     subtotal: float
+    discount: float = 0.0
+    coupon_code: Optional[str] = None
     total: float
     status: str = "pending"  # pending, paid, processing, shipped, delivered, cancelled
     payment_status: str = "initiated"  # initiated, paid, failed, expired
     session_id: Optional[str] = None
     shipping_address: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ------------------ Coupon Models ------------------
+class CouponCreate(BaseModel):
+    code: str = Field(min_length=2, max_length=40)
+    description: Optional[str] = Field(default=None, max_length=200)
+    discount_type: str = Field(pattern="^(percent|fixed)$")
+    discount_value: float = Field(gt=0)
+    min_purchase: Optional[float] = Field(default=None, ge=0)
+    expires_at: Optional[datetime] = None
+    usage_limit: Optional[int] = Field(default=None, ge=1)
+    active: bool = True
+
+
+class CouponValidate(BaseModel):
+    code: str
+    items: List[CartItem]
 
 
 # ------------------ Helpers ------------------
@@ -485,6 +618,93 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
 
 
 # ------------------ Orders / Checkout ------------------
+def _normalize_code(code: str) -> str:
+    return (code or "").strip().upper()
+
+
+async def _validate_and_calc_coupon(code: str, items_detailed: List[dict], subtotal: float):
+    """
+    Validates coupon and returns (coupon_doc, discount_amount, eligible_subtotal).
+    Raises HTTPException with user-friendly Spanish messages.
+    Coupon ONLY applies to items with no existing per-product discount.
+    """
+    normalized = _normalize_code(code)
+    coupon = await db.coupons.find_one({"code": normalized}, {"_id": 0})
+    if not coupon or not coupon.get("active", True):
+        raise HTTPException(400, "Cupón inválido o inactivo")
+
+    now = datetime.now(timezone.utc)
+    expires_at = coupon.get("expires_at")
+    if expires_at:
+        # expires_at may be stored as datetime (tz-aware) or ISO string
+        if isinstance(expires_at, str):
+            try:
+                expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            except Exception:
+                expires_at = None
+        if expires_at and expires_at < now:
+            raise HTTPException(400, "Este cupón ya expiró")
+
+    usage_limit = coupon.get("usage_limit")
+    times_used = coupon.get("times_used", 0)
+    if usage_limit is not None and times_used >= usage_limit:
+        raise HTTPException(400, "Este cupón ya alcanzó su límite de usos")
+
+    # Eligible = items WITHOUT existing product discount (no descuento sobre descuento)
+    eligible_subtotal = sum(it["line_total"] for it in items_detailed if not it.get("on_sale", False))
+    eligible_subtotal = round(eligible_subtotal, 2)
+
+    if eligible_subtotal <= 0:
+        raise HTTPException(400, "Este cupón no se puede aplicar: todos tus productos ya tienen descuento")
+
+    min_purchase = coupon.get("min_purchase")
+    if min_purchase and subtotal < min_purchase:
+        raise HTTPException(400, f"Este cupón requiere una compra mínima de ${min_purchase:.2f} MXN")
+
+    if coupon["discount_type"] == "percent":
+        discount = round(eligible_subtotal * coupon["discount_value"] / 100, 2)
+    else:  # fixed
+        discount = round(min(float(coupon["discount_value"]), eligible_subtotal), 2)
+
+    return coupon, discount, eligible_subtotal
+
+
+@api_router.post("/coupons/validate")
+async def validate_coupon_public(payload: CouponValidate):
+    """Public endpoint - lets the checkout page preview the discount before paying."""
+    if not payload.items:
+        raise HTTPException(400, "Carrito vacío")
+    product_ids = [i.product_id for i in payload.items]
+    products = await db.products.find({"id": {"$in": product_ids}}, {"_id": 0}).to_list(len(product_ids))
+    products_map = {p["id"]: p for p in products}
+
+    items_detailed = []
+    subtotal = 0.0
+    for item in payload.items:
+        p = products_map.get(item.product_id)
+        if not p:
+            raise HTTPException(400, "Producto inválido en el carrito")
+        on_sale = p.get("discount_percent", 0) > 0
+        price = float(p["price"]) * (1 - p.get("discount_percent", 0) / 100)
+        line_total = round(price * item.quantity, 2)
+        subtotal += line_total
+        items_detailed.append({"line_total": line_total, "on_sale": on_sale})
+    subtotal = round(subtotal, 2)
+
+    coupon, discount, eligible_subtotal = await _validate_and_calc_coupon(payload.code, items_detailed, subtotal)
+    return {
+        "valid": True,
+        "code": coupon["code"],
+        "discount_type": coupon["discount_type"],
+        "discount_value": coupon["discount_value"],
+        "discount_amount": discount,
+        "eligible_subtotal": eligible_subtotal,
+        "subtotal": subtotal,
+        "total": round(subtotal - discount, 2),
+        "description": coupon.get("description"),
+    }
+
+
 @api_router.post("/orders/checkout")
 async def create_checkout(payload: OrderCreate, request: Request):
     """Public guest checkout - no login required."""
@@ -501,6 +721,7 @@ async def create_checkout(payload: OrderCreate, request: Request):
         p = products_map.get(item.product_id)
         if not p:
             raise HTTPException(400, f"Producto {item.product_id} no encontrado")
+        on_sale = p.get("discount_percent", 0) > 0
         price = float(p["price"]) * (1 - p.get("discount_percent", 0) / 100)
         line_total = round(price * item.quantity, 2)
         subtotal += line_total
@@ -511,9 +732,15 @@ async def create_checkout(payload: OrderCreate, request: Request):
             "unit_price": round(price, 2),
             "quantity": item.quantity,
             "line_total": line_total,
+            "on_sale": on_sale,
         })
     subtotal = round(subtotal, 2)
-    total = subtotal
+    discount = 0.0
+    coupon_code_applied = None
+    if payload.coupon_code:
+        coupon, discount, _ = await _validate_and_calc_coupon(payload.coupon_code, items_detailed, subtotal)
+        coupon_code_applied = coupon["code"]
+    total = round(max(0.0, subtotal - discount), 2)
 
     order_id = str(uuid.uuid4())
     customer_email = payload.customer_email.lower()
@@ -543,6 +770,8 @@ async def create_checkout(payload: OrderCreate, request: Request):
         "customer_phone": customer_phone,
         "items": items_detailed,
         "subtotal": subtotal,
+        "discount": discount,
+        "coupon_code": coupon_code_applied,
         "total": total,
         "status": "pending",
         "payment_status": "initiated",
@@ -604,16 +833,7 @@ async def order_status(session_id: str, request: Request):
 
     # If paid and not yet processed, update order
     if new_payment_status == "paid" and not tx.get("processed", False):
-        order = await db.orders.find_one({"id": tx["order_id"]}, {"_id": 0})
-        if order:
-            await db.orders.update_one(
-                {"id": order["id"]},
-                {"$set": {"payment_status": "paid", "status": "processing"}}
-            )
-            await db.payment_transactions.update_one(
-                {"session_id": session_id},
-                {"$set": {"processed": True}}
-            )
+        await _mark_order_paid(tx)
 
     return {
         "status": new_status,
@@ -621,6 +841,32 @@ async def order_status(session_id: str, request: Request):
         "order_id": tx["order_id"],
         "amount": tx["amount"],
     }
+
+
+async def _mark_order_paid(tx: dict):
+    """Centralized: update order to paid, increment coupon usage, send notification email."""
+    order = await db.orders.find_one({"id": tx["order_id"]}, {"_id": 0})
+    if not order:
+        return
+    await db.orders.update_one(
+        {"id": order["id"]},
+        {"$set": {"payment_status": "paid", "status": "processing"}}
+    )
+    await db.payment_transactions.update_one(
+        {"session_id": tx["session_id"]},
+        {"$set": {"processed": True, "payment_status": "paid", "status": "complete"}}
+    )
+    # Increment coupon usage if any
+    if order.get("coupon_code"):
+        await db.coupons.update_one(
+            {"code": order["coupon_code"]},
+            {"$inc": {"times_used": 1}}
+        )
+    # Fire admin email notification (best-effort, non-blocking)
+    try:
+        await notify_admin_new_order(order)
+    except Exception as e:
+        logging.warning(f"Email notify failed for order {order['id']}: {e}")
 
 
 @api_router.post("/webhook/stripe")
@@ -638,17 +884,59 @@ async def stripe_webhook(request: Request):
     if event.payment_status == "paid":
         tx = await db.payment_transactions.find_one({"session_id": event.session_id}, {"_id": 0})
         if tx and not tx.get("processed", False):
-            order = await db.orders.find_one({"id": tx["order_id"]}, {"_id": 0})
-            if order:
-                await db.orders.update_one(
-                    {"id": order["id"]},
-                    {"$set": {"payment_status": "paid", "status": "processing"}}
-                )
-                await db.payment_transactions.update_one(
-                    {"session_id": event.session_id},
-                    {"$set": {"processed": True, "payment_status": "paid", "status": "complete"}}
-                )
+            await _mark_order_paid(tx)
     return {"received": True}
+
+
+# ------------------ Admin: Coupons ------------------
+@api_router.get("/admin/coupons")
+async def admin_list_coupons(admin: dict = Depends(require_admin)):
+    coupons = await db.coupons.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return coupons
+
+
+@api_router.post("/admin/coupons")
+async def admin_create_coupon(payload: CouponCreate, admin: dict = Depends(require_admin)):
+    code = _normalize_code(payload.code)
+    if await db.coupons.find_one({"code": code}):
+        raise HTTPException(400, "Ya existe un cupón con ese código")
+    doc = payload.model_dump()
+    doc["code"] = code
+    doc["id"] = str(uuid.uuid4())
+    doc["times_used"] = 0
+    doc["created_at"] = datetime.now(timezone.utc)
+    if doc.get("expires_at") and isinstance(doc["expires_at"], datetime) and doc["expires_at"].tzinfo is None:
+        doc["expires_at"] = doc["expires_at"].replace(tzinfo=timezone.utc)
+    await db.coupons.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.put("/admin/coupons/{coupon_id}")
+async def admin_update_coupon(coupon_id: str, payload: CouponCreate, admin: dict = Depends(require_admin)):
+    existing = await db.coupons.find_one({"id": coupon_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(404, "Cupón no encontrado")
+    new_code = _normalize_code(payload.code)
+    if new_code != existing["code"]:
+        conflict = await db.coupons.find_one({"code": new_code, "id": {"$ne": coupon_id}})
+        if conflict:
+            raise HTTPException(400, "Ya existe otro cupón con ese código")
+    update = payload.model_dump()
+    update["code"] = new_code
+    if update.get("expires_at") and isinstance(update["expires_at"], datetime) and update["expires_at"].tzinfo is None:
+        update["expires_at"] = update["expires_at"].replace(tzinfo=timezone.utc)
+    await db.coupons.update_one({"id": coupon_id}, {"$set": update})
+    existing.update(update)
+    return existing
+
+
+@api_router.delete("/admin/coupons/{coupon_id}")
+async def admin_delete_coupon(coupon_id: str, admin: dict = Depends(require_admin)):
+    res = await db.coupons.delete_one({"id": coupon_id})
+    if res.deleted_count == 0:
+        raise HTTPException(404, "Cupón no encontrado")
+    return {"ok": True}
 
 
 @api_router.get("/admin/orders/pending-count")
@@ -904,6 +1192,7 @@ async def startup():
     await db.payment_transactions.create_index("session_id", unique=True)
     await db.login_attempts.create_index("ip")
     await db.login_attempts.create_index("created_at")
+    await db.coupons.create_index("code", unique=True)
 
     # Seed admin accounts (multi-admin via ADMIN_ACCOUNTS JSON in .env)
     import json as _json

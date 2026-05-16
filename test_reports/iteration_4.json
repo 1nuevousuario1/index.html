@@ -1,0 +1,47 @@
+{
+  "summary": "Iteration 4 - Coupons feature (admin CRUD + public validation + checkout integration). Backend: 18/18 NEW pytest PASS in /app/backend/tests/test_coupons.py covering: admin auth-gated POST/GET/PUT/DELETE /api/admin/coupons; duplicate code -> 400; list sorted desc by created_at; PUBLIC POST /api/coupons/validate happy path (case-insensitive code), invalid/inactive code -> 400 'Cupón inválido o inactivo', all-discounted cart -> 400 'todos tus productos ya tienen descuento', min_purchase not met -> 400 'requiere una compra mínima', expired -> 400 'Este cupón ya expiró', usage_limit reached -> 400 'límite', mixed cart (1 discounted + 1 plain) verifies eligible_subtotal = ONLY plain line_total and discount applied only to it (no descuento sobre descuento); checkout with valid coupon_code persists order.coupon_code + discount > 0 + total = subtotal - discount; checkout with invalid coupon_code -> 400 and NO order created. Regression: existing 14/14 test_admin_security.py STILL PASSES (multi-admin login, brute-force lockout, audit log, change-password, secure logout, guest checkout, admin guards). Frontend: full UI flow PASS — AdminDashboard has admin-coupons-link → /admin/cupones (admin-coupons-page) → open-create-coupon opens form → submit-coupon creates a coupon-row-{CODE} → edit-coupon-{CODE} updates value → delete-coupon-{CODE} removes it (toast 'Cupón eliminado'); Checkout coupon section: subtotal $160 → apply COCPN6137 (10%) → coupon-applied banner + discount-row 'Descuento (COCPN6137) -$16.00' + checkout-total $144 → remove-coupon clears banner+discount-row and restores total to $160 → invalid code 'ZZ-INVALID-ZZ' shows red error toast, no banner. Notification mock: RESEND_API_KEY='' in .env, code path is best-effort try/except (notify_admin_new_order does NOT raise) — verified via code review (lines 197-243, _mark_order_paid lines 846-867). Stripe webhook signature verification not active (STRIPE_WEBHOOK_SECRET=''), expected per request.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All pages", "issues": ["External tawk.to chat embed blocked by CORS (pre-existing, third-party, not a regression)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_coupons.py",
+    "/app/backend/tests/test_admin_security.py",
+    "/app/test_reports/pytest/iter4_coupons.xml"
+  ],
+  "action_items": [
+    "(Optional) /app/backend/tests/test_guest_checkout.py still references old admin@mundoinfantil.com / admin123 (removed in iter3). Update fixtures to use malugarciav86@gmail.com OR delete that file since test_admin_security.py + test_coupons.py now cover its scope. It is NOT being run as part of iter3/iter4 regression because it would fail at admin_token fixture.",
+    "(Optional) CORS allow_origins=['*'] with allow_credentials=True is technically invalid per spec — carry-over from iter1/2/3.",
+    "(Optional) /app/backend/server.py is now 1277 lines — recommend splitting into routers (coupons, orders, admin, auth) per <code_review_guidelines> file-size rule.",
+    "(Optional) Coupon expires_at: if stored as string via Mongo it falls back to None and skips expiry check silently (server.py:642-644). Currently safe because API stores datetime, but worth a stricter validation in case of manual DB edits."
+  ],
+  "critical_code_review_comments": [
+    "Coupon discount logic correctly excludes on_sale items (discount_percent > 0) from eligible_subtotal in both _validate_and_calc_coupon and the checkout path — 'no descuento sobre descuento' rule verified end-to-end with mixed cart test. ✅",
+    "Coupon code normalization (_normalize_code uppercase+strip) applied consistently in create / validate / checkout / unique index — case-insensitive lookups work as expected. ✅",
+    "Unique index on db.coupons.code (server.py:1195) plus pre-insert duplicate check (server.py:901) — double-safe. ✅",
+    "_mark_order_paid (server.py:846-867) wraps notify_admin_new_order in try/except so missing RESEND_API_KEY does NOT break the payment flow. coupon usage increment happens BEFORE the email call, so even if email fails the usage counter is correct. ✅",
+    "notify_admin_new_order (server.py:197) early-returns if RESEND_API_KEY is empty — no exception raised, logs a warning. ✅",
+    "Admin coupon CRUD all gated by Depends(require_admin) — verified 401 on all three endpoints without auth. ✅",
+    "Public /api/coupons/validate does NOT require auth (correct — frontend calls it before payment). ✅",
+    "Pydantic CouponCreate uses Field(pattern='^(percent|fixed)$') and gt=0 / ge=0 / ge=1 constraints — proper input validation. ✅",
+    "Server file is 1277 lines — exceeds the 700-line guideline. Recommend modularization before next major feature.",
+    "Stripe webhook (server.py ~887) does NOT yet verify STRIPE_WEBHOOK_SECRET signature — currently blank in .env, marked as 'waiting for user'. _mark_order_paid is idempotent via tx.processed flag, but production webhook MUST verify signature before deploy."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_coupons.py (NEW - 18 tests)"
+  ],
+  "success_rate": {"backend": "100% (18/18 new + 14/14 regression = 32/32)", "frontend": "100% (admin CRUD + checkout coupon apply/remove/invalid all verified)"},
+  "test_credentials": "Admin: malugarciav86@gmail.com / sbp?pX8oD&fDdPh? (working). Admin2: soloyoyjehova@outlook.com / P8RFc?l6z?FW1uzp (working). No customer login - guest checkout only.",
+  "seed_data_creation": "Tests created ~10 coupons (UICPN*, COCPN*, AAA*, BBB*, TESTCPN*) and 1 paid order (test_coupon_buyer@example.com). All cleaned up via mongosh after run. WELCOME10 manual coupon preserved.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: REACT_APP_BACKEND_URL=https://jugueteria-pro.preview.emergentagent.com MONGO_URL=mongodb://localhost:27017 DB_NAME=mundo_infantil pytest /app/backend/tests/test_coupons.py /app/backend/tests/test_admin_security.py -v. test_coupons.py has autouse clean_login_attempts fixture to prevent brute-force lockout from bleeding. The 'products' fixture auto-temp-marks a 2nd product with discount_percent=20 if no discounted product exists in the DB, then reverts at teardown. UI testids verified: admin-coupons-link, admin-coupons-page, open-create-coupon, coupon-form, coupon-code-input, coupon-type, coupon-value, submit-coupon, coupon-row-{CODE}, edit-coupon-{CODE}, delete-coupon-{CODE}, coupon-input, apply-coupon, coupon-applied, remove-coupon, discount-row, checkout-total. test_guest_checkout.py is STALE (uses removed admin@mundoinfantil.com) — recommend deletion or update.",
+  "rca of the issue": "N/A — no defects found. Coupons feature is production-ready end-to-end."
+}

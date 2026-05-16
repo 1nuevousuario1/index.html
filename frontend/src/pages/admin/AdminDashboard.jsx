@@ -66,6 +66,9 @@ export default function AdminDashboard() {
           <Link to="/admin/productos" className="mi-btn-yellow" data-testid="admin-products-link">Productos</Link>
           <Link to="/admin/clientes" className="mi-btn-red" data-testid="admin-customers-link">Clientes</Link>
           <Link to="/admin/mensajes" className="mi-btn-primary bg-[#6BCB77] hover:bg-[#5ab867]" style={{boxShadow: "0 4px 14px rgba(107, 203, 119, 0.3)"}} data-testid="admin-messages-link">Mensajes</Link>
+          <Link to="/admin/cupones" className="mi-btn-yellow" data-testid="admin-coupons-link">
+            🎟️ Cupones
+          </Link>
           <Link to="/admin/seguridad" className="mi-btn-primary bg-[#9b59b6] hover:bg-[#8a4ba6]" style={{boxShadow: "0 4px 14px rgba(155, 89, 182, 0.3)"}} data-testid="admin-audit-link">
             <ShieldCheck size={16} className="inline -mt-1 mr-1" /> Seguridad
           </Link>
